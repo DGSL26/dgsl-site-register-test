@@ -1790,160 +1790,52 @@ body.change-log-open {
 .changelog-version { display: flex; align-items: center; gap: 8px; }
 
 
-/* ============================================================
-   REGISTER FILTER BUTTON
-   ============================================================ */
+/* Data Management submenu */
+.settings-management-option { display:flex !important; align-items:center; justify-content:space-between; gap:8px; }
+.settings-management-item { width:100%; }
 
-.actions {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+
+/* Compact permit filter beside search */
+.search-filter-wrap { display:flex; align-items:center; gap:8px; position:relative; }
+.search-filter-wrap #search { min-width:0; }
+.permit-filter-wrap { position:relative; flex:0 0 auto; }
+.permit-filter-button { width:42px; height:38px; padding:8px !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; box-sizing:border-box !important; border:1px solid #cbd5df !important; border-radius:6px !important; background:#fff !important; }
+.permit-filter-button svg { width:20px; height:20px; fill:none; stroke:#2f80ed; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; display:block; }
+.permit-filter-button.active { background:#eaf2ff !important; border-color:#2f80ed !important; }
+.permit-filter-button.active svg { stroke:#2f80ed; }
+.permit-filter-menu { position:absolute; top:calc(100% + 8px); right:0; z-index:50; width:min(330px, calc(100vw - 32px)); padding:12px; background:#fff; border:1px solid #d9e2ea; border-radius:10px; box-shadow:0 12px 30px rgba(31,78,120,.16); box-sizing:border-box; }
+.permit-filter-menu[hidden] { display:none !important; }
+.permit-filter-menu-title { font-size:13px; font-weight:700; color:#1f2933; padding:4px 8px 8px; }
+.permit-filter-option { width:100%; display:flex; align-items:flex-start; gap:10px; padding:10px 8px !important; border:0 !important; border-radius:7px !important; background:#fff !important; text-align:left; }
+.permit-filter-option + .permit-filter-option { border-top:1px solid #edf1f4 !important; border-radius:0 !important; }
+.permit-filter-option:hover, .permit-filter-option.active { background:#f5f9ff !important; }
+.permit-filter-check { flex:0 0 16px; width:16px; height:16px; margin-top:2px; border:1.5px solid #9aa8b5; border-radius:3px; box-sizing:border-box; }
+.permit-filter-option.active .permit-filter-check { border-color:#2f80ed; background:#2f80ed; box-shadow:inset 0 0 0 3px #fff; }
+.permit-filter-option strong { display:block; color:#1f4e78; font-size:13px; line-height:1.3; }
+.permit-filter-option small { display:block; color:#68737d; font-size:11px; line-height:1.35; margin-top:2px; }
+@media (max-width:800px) { .search-filter-wrap { width:100%; } .search-filter-wrap #search { flex:1 1 auto; width:auto; } .permit-filter-button { width:42px; height:38px; flex:0 0 42px; } }
+
+/* Keep the Data Management unread badge blue and centered like Notifications. */
+#settingsDataManagement .bug-reports-badge {
+  position:static !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  vertical-align:middle !important;
+  box-sizing:border-box !important;
+  min-width:17px !important;
+  height:17px !important;
+  padding:0 4px !important;
+  margin:0 0 0 8px !important;
+  border-radius:999px !important;
+  background:#2f80ed !important;
+  color:#fff !important;
+  font-size:10px !important;
+  font-weight:700 !important;
+  line-height:17px !important;
+  text-align:center !important;
+  border:1px solid #fff !important;
+  font-variant-numeric:tabular-nums !important;
 }
-
-.register-filter-button {
-  width: 42px;
-  min-width: 42px;
-  height: 38px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #cbd8e6;
-  border-radius: 8px;
-  background: #fff;
-  color: #1f4e78;
-  box-sizing: border-box;
-}
-
-.register-filter-button svg {
-  width: 19px;
-  height: 19px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.register-filter-button:hover,
-.register-filter-button:focus-visible,
-.register-filter-button.active {
-  border-color: #2f80ed;
-  color: #2f80ed;
-  background: #f4f8ff;
-}
-
-.register-filter-menu {
-  position: absolute;
-  z-index: 1000;
-  top: calc(100% + 8px);
-  right: 0;
-  width: min(310px, calc(100vw - 32px));
-  padding: 10px;
-  border: 1px solid #d9e1ea;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 10px 26px rgba(31, 41, 51, 0.14);
-  box-sizing: border-box;
-}
-
-.register-filter-title {
-  padding: 5px 8px 9px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #1f2933;
-}
-
-.register-filter-option,
-.register-filter-clear {
-  width: 100%;
-  min-height: 48px;
-  padding: 8px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  text-align: left;
-  border: 0;
-  border-top: 1px solid #edf1f5;
-  border-radius: 0;
-  background: #fff;
-  color: #1f2933;
-  box-sizing: border-box;
-}
-
-.register-filter-option:hover,
-.register-filter-option:focus-visible,
-.register-filter-option.active {
-  background: #f6f9fd;
-}
-
-.register-filter-check {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 16px;
-  margin-top: 2px;
-  border: 1.5px solid #9aabbc;
-  border-radius: 3px;
-  box-sizing: border-box;
-}
-
-.register-filter-option.active .register-filter-check {
-  border-color: #2f80ed;
-  background: #2f80ed;
-  box-shadow: inset 0 0 0 3px #fff;
-}
-
-.register-filter-option strong,
-.register-filter-option small {
-  display: block;
-}
-
-.register-filter-option strong {
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.register-filter-option small {
-  margin-top: 2px;
-  font-size: 11px;
-  line-height: 15px;
-  color: #687789;
-}
-
-.register-filter-clear {
-  min-height: 38px;
-  justify-content: center;
-  align-items: center;
-  margin-top: 4px;
-  border-radius: 7px;
-  color: #1f4e78;
-  font-weight: 600;
-}
-
-.register-filter-clear:hover,
-.register-filter-clear:focus-visible {
-  background: #f4f8ff;
-}
-
-@media (max-width: 800px) {
-  .actions {
-    width: 100%;
-  }
-
-  .actions #search {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .register-filter-button {
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-  }
-
-  .register-filter-menu {
-    right: 0;
-    width: min(300px, calc(100vw - 40px));
-  }
-}
+#settingsDataManagement .bug-reports-badge[style*="display: none"] { display:none !important; }
+#settingsDataManagement .bug-reports-badge[style*="display: inline-flex"] { display:inline-flex !important; }

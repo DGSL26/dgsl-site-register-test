@@ -1960,6 +1960,7 @@ function showRowMoreDialog(record) {
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         ${currentUser ? '<button type="button" id="rowMoreCopy">Copy</button>' : '<button type="button" id="rowMoreDownload">Download PDF</button>'}
         <button type="button" id="rowMoreShare">Share</button>
+        ${currentUser ? '<button type="button" id="rowMoreDelete">Delete</button>' : ''}
       </div>
       <div style="margin-top:18px;">
         <button type="button" id="rowMoreCancel">Cancel</button>
@@ -1995,6 +1996,31 @@ function showRowMoreDialog(record) {
     dialog.close();
     setTimeout(() => sharePdfToDevice(record), 0);
   };
+
+  const moreDeleteButton = dialog.querySelector('#rowMoreDelete');
+  if (moreDeleteButton) {
+    moreDeleteButton.onclick = async () => {
+      if (!confirm('Delete this handover record?')) return;
+      dialog.close();
+      try {
+        if (Array.isArray(record.photos)) {
+          for (const url of record.photos) {
+            await deletePhoto(url);
+          }
+        }
+        const { error } = await supabaseClient
+          .from('handovers_test')
+          .delete()
+          .eq('id', record.id);
+        if (error) throw error;
+        if (editing?.id === record.id) editing = null;
+        await loadRecords();
+      } catch (error) {
+        console.error('Delete handover error:', error);
+        alert('Unable to delete the handover.');
+      }
+    };
+  }
 
   if (!dialog.open) dialog.showModal();
 }
@@ -3783,67 +3809,19 @@ $('#search').oninput =
   render;
 
 function setupRegisterFilter() {
-  const search = document.getElementById('search');
-  if (!search) return;
-
-  const actions = search.closest('.actions');
-  if (!actions) return;
-
-  // Remove any older/broken filter control before creating the clean version.
-  actions.querySelectorAll('[data-register-filter-button], .register-filter-menu').forEach(el => el.remove());
-
-  actions.style.position = 'relative';
-
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.id = 'registerFilterButton';
-  button.dataset.registerFilterButton = 'true';
-  button.className = 'register-filter-button';
-  button.setAttribute('aria-label', 'Filter work permits');
-  button.setAttribute('title', 'Filter work permits');
-  button.setAttribute('aria-expanded', 'false');
-  button.innerHTML = `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 5h16l-6.2 7.2v5.1l-3.6 1.7v-6.8L4 5z"></path>
-    </svg>
-  `;
-
-  const menu = document.createElement('div');
-  menu.className = 'register-filter-menu';
-  menu.hidden = true;
-  menu.innerHTML = `
-    <div class="register-filter-title">Filter Work Permits</div>
-    <button type="button" class="register-filter-option" data-register-filter="Open/On Hold">
-      <span class="register-filter-check"></span>
-      <span>
-        <strong>Open/On Hold</strong>
-        <small>Show all open and on hold permits</small>
-      </span>
-    </button>
-    <button type="button" class="register-filter-option" data-register-filter="Open Longer Than 1 Week">
-      <span class="register-filter-check"></span>
-      <span>
-        <strong>Open Longer Than 1 Week</strong>
-        <small>Show open permits older than 7 days</small>
-      </span>
-    </button>
-    <button type="button" class="register-filter-clear" data-register-filter="All">
-      Clear filter
-    </button>
-  `;
-
-  actions.appendChild(button);
-  actions.appendChild(menu);
+  const button = document.getElementById('permitFilterButton');
+  const menu = document.getElementById('permitFilterMenu');
+  if (!button || !menu) return;
 
   const updateMenuState = () => {
-    menu.querySelectorAll('[data-register-filter]').forEach(option => {
-      option.classList.toggle(
-        'active',
-        option.dataset.registerFilter === filter
-      );
+    menu.querySelectorAll('[data-permit-filter]').forEach(option => {
+      const active = option.dataset.permitFilter === filter;
+      option.classList.toggle('active', active);
+      option.setAttribute('aria-checked', active ? 'true' : 'false');
     });
     const active = filter === 'Open/On Hold' || filter === 'Open Longer Than 1 Week';
     button.classList.toggle('active', active);
+    button.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
   };
 
   const closeMenu = () => {
@@ -3854,14 +3832,13 @@ function setupRegisterFilter() {
   button.onclick = event => {
     event.stopPropagation();
     menu.hidden = !menu.hidden;
-    button.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
     updateMenuState();
   };
 
-  menu.querySelectorAll('[data-register-filter]').forEach(option => {
+  menu.querySelectorAll('[data-permit-filter]').forEach(option => {
     option.onclick = event => {
       event.stopPropagation();
-      filter = option.dataset.registerFilter || 'All';
+      filter = option.dataset.permitFilter || 'All';
       closeMenu();
       render();
       updateMenuState();
@@ -3869,7 +3846,9 @@ function setupRegisterFilter() {
   });
 
   document.addEventListener('click', event => {
-    if (!menu.hidden && !actions.contains(event.target)) closeMenu();
+    if (!menu.hidden && !menu.contains(event.target) && event.target !== button && !button.contains(event.target)) {
+      closeMenu();
+    }
   });
 
   document.addEventListener('keydown', event => {
