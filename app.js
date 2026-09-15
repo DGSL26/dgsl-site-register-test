@@ -293,6 +293,9 @@ async function refreshBugReportsBadge() {
     updateBugReportsBadge(count || 0);
   } catch (error) {
     console.error('Bug report unread count error:', error);
+    // If the unread-count request fails (for example because the table
+    // policy rejects the request), do not leave a stale badge showing.
+    updateBugReportsBadge(0);
   }
 }
 

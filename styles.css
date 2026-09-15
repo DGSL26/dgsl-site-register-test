@@ -1603,7 +1603,8 @@ body.change-log-open {
 .settings-option { width:100%; text-align:left; padding:12px 14px; background:#fff; }
 .settings-section { display:grid; gap:10px; margin-top:4px; padding-top:15px; border-top:1px solid #e0e5e9; }
 .settings-section-title { font-size:12px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:#607080; margin-bottom:1px; }
-.settings-import-option { display:block; cursor:pointer; box-sizing:border-box; }
+.settings-import-option { display:flex !important; align-items:center !important; width:100% !important; min-height:43px !important; cursor:pointer; box-sizing:border-box; border:1px solid #cbd5df !important; border-radius:6px !important; padding:12px 14px !important; background:#fff !important; color:#243447 !important; }
+.settings-import-option:hover { background:#f1f5f8 !important; }
 .settings-logout { color:#b42318; }
 .notifications-empty { padding:22px 4px 5px; color:#68737d; }
 .version-bar { cursor:default !important; }
