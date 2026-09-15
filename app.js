@@ -3813,6 +3813,19 @@ function setupRegisterFilter() {
   const menu = document.getElementById('permitFilterMenu');
   if (!button || !menu) return;
 
+  // Ensure the clear option is always present, even if an older cached/index
+  // version of the filter menu is being used.
+  if (!menu.querySelector('[data-permit-clear]')) {
+    const clearOption = document.createElement('button');
+    clearOption.type = 'button';
+    clearOption.className = 'permit-filter-option permit-filter-clear';
+    clearOption.dataset.permitClear = 'true';
+    clearOption.innerHTML = '<span class="permit-filter-check permit-filter-clear-mark" aria-hidden="true"></span><span><strong>Clear filter</strong><small>Show all work permits</small></span>';
+    menu.appendChild(clearOption);
+  }
+
+  const clearOption = menu.querySelector('[data-permit-clear]');
+
   const updateMenuState = () => {
     menu.querySelectorAll('[data-permit-filter]').forEach(option => {
       const active = option.dataset.permitFilter === filter;
@@ -3844,6 +3857,14 @@ function setupRegisterFilter() {
       updateMenuState();
     };
   });
+
+  clearOption.onclick = event => {
+    event.stopPropagation();
+    filter = 'All';
+    closeMenu();
+    render();
+    updateMenuState();
+  };
 
   document.addEventListener('click', event => {
     if (!menu.hidden && !menu.contains(event.target) && event.target !== button && !button.contains(event.target)) {
