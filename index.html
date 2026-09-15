@@ -57,7 +57,7 @@
 
 <section class="cards" aria-label="Site summary">
 
-  <article class="blue">
+  <article class="blue summary-card-clickable" data-filter-card="All" tabindex="0" role="button" aria-label="Show all work permits">
     <span class="summary-card-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 3.5h6v3H9z"></path><path d="M8.5 11h7M8.5 15h4"></path><path d="M17 15.5l1.4 1.4 2.6-3"></path></svg>
     </span>
@@ -66,7 +66,7 @@
     <small id="totalWeek" class="week-change">No change</small>
   </article>
 
-  <article class="amber">
+  <article class="amber summary-card-clickable" data-filter-card="Work Permit Open" tabindex="0" role="button" aria-label="Show open work permits">
     <span class="summary-card-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7v5l3.5 2"></path></svg>
     </span>
@@ -75,7 +75,7 @@
     <small id="progressWeek" class="week-change">No change</small>
   </article>
 
-  <article class="green">
+  <article class="green summary-card-clickable" data-filter-card="Work Permit Closed" tabindex="0" role="button" aria-label="Show closed work permits">
     <span class="summary-card-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="m8.5 12.2 2.2 2.2 4.8-5"></path></svg>
     </span>
@@ -84,7 +84,7 @@
     <small id="closedWeek" class="week-change">No change</small>
   </article>
 
-  <article class="red">
+  <article class="red summary-card-clickable" data-filter-card="Work Permit on Hold" tabindex="0" role="button" aria-label="Show work permits on hold">
     <span class="summary-card-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M9.5 9v6M14.5 9v6"></path></svg>
     </span>
@@ -132,26 +132,6 @@
 
   </div>
 
-
-  <div class="filters">
-
-    <button data-filter="All" class="active">
-      All
-    </button>
-
-    <button data-filter="Work Permit Open">
-      Work Permit Open
-    </button>
-
-    <button data-filter="Work Permit Closed">
-      Work Permit Closed
-    </button>
-
-    <button data-filter="Work Permit on Hold">
-      Work Permit on Hold
-    </button>
-
-  </div>
 
 
   <div class="table-wrap">

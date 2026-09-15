@@ -3653,42 +3653,29 @@ async function deletePhoto(
 
 
 // ============================================================
-// FILTERS
+// SUMMARY CARD FILTERS
 // ============================================================
 
 document
   .querySelectorAll(
-    '[data-filter]'
+    '[data-filter-card]'
   )
   .forEach(
-    button => {
+    card => {
 
-      button.onclick =
-        () => {
+      const applyCardFilter = () => {
+        filter = card.dataset.filterCard || 'All';
+        render();
+      };
 
-          filter =
-            button.dataset.filter;
+      card.onclick = applyCardFilter;
 
-
-          document
-            .querySelectorAll(
-              '[data-filter]'
-            )
-            .forEach(
-              x => {
-
-                x.classList.toggle(
-                  'active',
-                  x === button
-                );
-
-              }
-            );
-
-
-          render();
-
-        };
+      card.onkeydown = event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          applyCardFilter();
+        }
+      };
 
     }
   );
