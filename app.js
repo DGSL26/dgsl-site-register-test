@@ -20,7 +20,6 @@ let supabaseClient = null;
 let records = [];
 let editing = null;
 let filter = 'All';
-let permitFilter = 'All';
 
 const SITE_VERSION = '1.2.8';
 const NOTIFICATIONS_TABLE = 'site_notifications_test';
@@ -53,35 +52,6 @@ const today = () => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 };
-
-function updateDateBar() {
-  const dateEl = document.getElementById('dateBarDate');
-  const timeEl = document.getElementById('dateBarTime');
-  const picker = document.getElementById('datePicker');
-  if (!dateEl || !timeEl) return;
-
-  const now = new Date();
-  const selected = picker?.value ? new Date(`${picker.value}T00:00:00`) : now;
-  dateEl.textContent = selected.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  timeEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
-  if (picker && !picker.value) picker.value = today();
-}
-
-function setupDateBar() {
-  const bar = document.getElementById('dateBar');
-  const picker = document.getElementById('datePicker');
-  if (!bar || !picker) return;
-
-  if (!picker.value) picker.value = today();
-  updateDateBar();
-
-  bar.onclick = () => {
-    if (typeof picker.showPicker === 'function') picker.showPicker();
-    else picker.click();
-  };
-  picker.onchange = updateDateBar;
-  setInterval(updateDateBar, 30000);
-}
 
 // ============================================================
 // AUTHENTICATION UI
@@ -174,15 +144,7 @@ function openSettingsDialog() {
         <div class="settings-options">
           <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
           <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
-          <button type="button" id="settingsBugReports" class="settings-option" style="display:none; position:relative;">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
-          <div class="settings-section">
-            <div class="settings-section-title">Data Management</div>
-            <button type="button" id="settingsExport" class="settings-option">Export Data</button>
-            <label class="settings-option settings-import-option" for="settingsImport">
-              <span>Import Data</span>
-              <input id="settingsImport" type="file" accept="application/json" hidden>
-            </label>
-          </div>
+          <button type="button" id="settingsDataManagement" class="settings-option">Data Management <span id="dataManagementBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
           <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
         </div>
       </div>
@@ -198,48 +160,85 @@ function openSettingsDialog() {
       dialog.close();
       openBugReportDialog();
     };
-    dialog.querySelector('#settingsBugReports').onclick = () => {
-      dialog.close();
-      openBugReportsDialog();
-    };
-    dialog.querySelector('#settingsExport').onclick = () => {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }));
-      link.download = `DGSL-site-register-${today()}.json`;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(link.href), 0);
-    };
-    dialog.querySelector('#settingsImport').onchange = async e => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          const imported = JSON.parse(reader.result);
-          if (!Array.isArray(imported)) throw new Error('Invalid backup');
-          for (const record of imported) {
-            const databaseRecord = toDatabase(record);
-            const { error } = await supabaseClient.from('handovers_test').upsert(databaseRecord);
-            if (error) throw error;
-          }
-          await loadRecords();
-          alert('Backup imported.');
-        } catch (error) {
-          console.error(error);
-          alert('That file is not a valid DGSL backup.');
-        } finally {
-          e.target.value = '';
-        }
-      };
-      reader.readAsText(file);
+    dialog.querySelector('#settingsDataManagement').onclick = () => {
+      showDataManagementView(dialog);
     };
     dialog.querySelector('#settingsLogout').onclick = () => {
       dialog.close();
       showLogoutConfirmDialog();
     };
   }
+  if (dialog.dataset.view === 'data-management') {
+    dialog.dataset.view = 'settings';
+    const options = dialog.querySelector('.settings-options');
+    if (options) {
+      options.innerHTML = `
+        <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
+        <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
+        <button type="button" id="settingsDataManagement" class="settings-option">Data Management <span id="dataManagementBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
+        <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
+      `;
+      options.querySelector('#settingsChangeLog').onclick = () => { dialog.close(); openChangeLogDialog(); };
+      options.querySelector('#settingsBugReport').onclick = () => { dialog.close(); openBugReportDialog(); };
+      options.querySelector('#settingsDataManagement').onclick = () => { showDataManagementView(dialog); };
+      options.querySelector('#settingsLogout').onclick = () => { dialog.close(); showLogoutConfirmDialog(); };
+    }
+  }
   if (!dialog.open) dialog.showModal();
   showBugReportsButtonForAdmin();
+}
+
+
+function showDataManagementView(dialog) {
+  dialog.dataset.view = 'data-management';
+  const options = dialog.querySelector('.settings-options');
+  if (!options) return;
+
+  options.innerHTML = `
+    <button type="button" id="settingsBugReports" class="settings-option" style="position:relative;">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
+    <button type="button" id="settingsExport" class="settings-option">Export Data</button>
+    <label class="settings-option settings-import-option" for="settingsImport">
+      <span>Import Data</span>
+      <input id="settingsImport" type="file" accept="application/json" hidden>
+    </label>
+  `;
+
+  options.querySelector('#settingsBugReports').onclick = () => {
+    dialog.close();
+    openBugReportsDialog();
+  };
+  options.querySelector('#settingsExport').onclick = () => {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }));
+    link.download = `DGSL-site-register-${today()}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
+  };
+  options.querySelector('#settingsImport').onchange = async e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const imported = JSON.parse(reader.result);
+        if (!Array.isArray(imported)) throw new Error('Invalid backup');
+        for (const record of imported) {
+          const databaseRecord = toDatabase(record);
+          const { error } = await supabaseClient.from('handovers_test').upsert(databaseRecord);
+          if (error) throw error;
+        }
+        await loadRecords();
+        alert('Backup imported.');
+      } catch (error) {
+        console.error(error);
+        alert('That file is not a valid DGSL backup.');
+      } finally {
+        e.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  };
+  refreshBugReportsBadge();
 }
 
 
@@ -257,13 +256,19 @@ function bugReportEscape(value) {
 }
 
 function updateBugReportsBadge(unreadCount) {
-  const button = document.getElementById('settingsBugReports');
-  const badge = document.getElementById('bugReportsBadge');
-  if (!button || !badge) return;
   const count = Number(unreadCount) || 0;
-  badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
-  badge.className = 'notification-badge bug-reports-badge';
-  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  const text = count > 99 ? '99+' : (count > 0 ? String(count) : '');
+  const display = count > 0 ? 'inline-flex' : 'none';
+
+  [
+    document.getElementById('bugReportsBadge'),
+    document.getElementById('dataManagementBadge')
+  ].forEach(badge => {
+    if (!badge) return;
+    badge.textContent = text;
+    badge.className = 'notification-badge bug-reports-badge';
+    badge.style.display = display;
+  });
 }
 
 async function refreshBugReportsBadge() {
@@ -1380,16 +1385,9 @@ function updateSummaryCardSelection() {
     card.setAttribute('aria-pressed', selected ? 'true' : 'false');
   });
 
-  let label;
-  if (permitFilter === 'Open/On Hold') {
-    label = 'Showing: Open/On Hold';
-  } else if (permitFilter === 'Open Longer Than 1 Week') {
-    label = 'Showing: Open Longer Than 1 Week';
-  } else if (filter === 'All') {
-    label = 'Showing: All Work Permits';
-  } else {
-    label = `Showing: ${filter.replace('Work Permit on Hold', 'Work Permits On Hold').replace('Work Permit Open', 'Open Work Permits').replace('Work Permit Closed', 'Closed Work Permits')}`;
-  }
+  const label = filter === 'All'
+    ? 'Showing: All Work Permits'
+    : `Showing: ${filter.replace('Work Permit on Hold', 'Work Permits On Hold').replace('Work Permit Open', 'Open Work Permits').replace('Work Permit Closed', 'Closed Work Permits')}`;
 
   const indicator = document.getElementById('activeFilterLabel');
   if (indicator) indicator.textContent = label;
@@ -1408,23 +1406,21 @@ function render() {
 
   const filtered =
     records
-      .filter(x => {
-        const matchesCard = filter === 'All' || x.status === filter;
-        let matchesPermitFilter = true;
+      .filter(x =>
 
-        if (permitFilter === 'Open/On Hold') {
-          matchesPermitFilter = x.status === 'Work Permit Open' || x.status === 'Work Permit on Hold';
-        } else if (permitFilter === 'Open Longer Than 1 Week') {
-          const handover = new Date(`${String(x.handoverDate || '')}T00:00:00`);
-          const ageDays = (Date.now() - handover.getTime()) / 86400000;
-          matchesPermitFilter = x.status === 'Work Permit Open' && Number.isFinite(ageDays) && ageDays > 7;
-        }
+        (
+          filter === 'All' ||
+          x.status === filter
+        )
 
-        return matchesCard && matchesPermitFilter && Object.values(x)
+        &&
+
+        Object.values(x)
           .join(' ')
           .toLowerCase()
-          .includes(q);
-      })
+          .includes(q)
+
+      )
       .sort((a, b) => {
         const aDate = String(a.handoverDate || '');
         const bDate = String(b.handoverDate || '');
@@ -1950,6 +1946,7 @@ function showRowMoreDialog(record) {
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         ${currentUser ? '<button type="button" id="rowMoreCopy">Copy</button>' : '<button type="button" id="rowMoreDownload">Download PDF</button>'}
         <button type="button" id="rowMoreShare">Share</button>
+        ${currentUser ? '<button type="button" id="rowMoreDelete" class="danger">Delete Handover</button>' : ''}
       </div>
       <div style="margin-top:18px;">
         <button type="button" id="rowMoreCancel">Cancel</button>
@@ -1985,6 +1982,29 @@ function showRowMoreDialog(record) {
     dialog.close();
     setTimeout(() => sharePdfToDevice(record), 0);
   };
+
+  const moreDeleteButton = dialog.querySelector('#rowMoreDelete');
+  if (moreDeleteButton) {
+    moreDeleteButton.onclick = async () => {
+      if (!currentUser) return;
+      if (!confirm('Delete this handover record?')) return;
+      dialog.close();
+      try {
+        if (Array.isArray(record.photos)) {
+          for (const url of record.photos) await deletePhoto(url);
+        }
+        const { error } = await supabaseClient
+          .from('handovers_test')
+          .delete()
+          .eq('id', record.id);
+        if (error) throw error;
+        await loadRecords();
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('There was a problem deleting the handover.');
+      }
+    };
+  }
 
   if (!dialog.open) dialog.showModal();
 }
@@ -3737,56 +3757,6 @@ async function deletePhoto(
 
 
 // ============================================================
-// WORK PERMIT FILTER MENU
-// ============================================================
-
-function updatePermitFilterUi() {
-  const button = document.getElementById('filterButton');
-  const menu = document.getElementById('filterMenu');
-  if (!button || !menu) return;
-
-  menu.querySelectorAll('[data-permit-filter]').forEach(option => {
-    const selected = option.dataset.permitFilter === permitFilter;
-    option.classList.toggle('selected', selected);
-    option.setAttribute('aria-pressed', selected ? 'true' : 'false');
-  });
-  button.classList.toggle('active', permitFilter !== 'All');
-}
-
-function setupPermitFilterMenu() {
-  const button = document.getElementById('filterButton');
-  const menu = document.getElementById('filterMenu');
-  if (!button || !menu) return;
-
-  button.onclick = event => {
-    event.stopPropagation();
-    const open = !menu.hidden;
-    menu.hidden = open;
-    button.setAttribute('aria-expanded', open ? 'false' : 'true');
-  };
-
-  menu.querySelectorAll('[data-permit-filter]').forEach(option => {
-    option.onclick = () => {
-      permitFilter = option.dataset.permitFilter || 'All';
-      filter = 'All';
-      menu.hidden = true;
-      button.setAttribute('aria-expanded', 'false');
-      updatePermitFilterUi();
-      render();
-    };
-  });
-
-  document.addEventListener('click', event => {
-    if (!menu.hidden && !menu.contains(event.target) && event.target !== button) {
-      menu.hidden = true;
-      button.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  updatePermitFilterUi();
-}
-
-// ============================================================
 // SUMMARY CARD FILTERS
 // ============================================================
 
@@ -3799,8 +3769,6 @@ document
 
       const applyCardFilter = () => {
         filter = card.dataset.filterCard || 'All';
-        permitFilter = 'All';
-        updatePermitFilterUi();
         render();
       };
 
@@ -4265,10 +4233,3 @@ $('#closePdf').onclick =
     $('#pdfViewer').innerHTML = '';
 
   };
-
-
-// Initial responsive date/filter controls.
-document.addEventListener('DOMContentLoaded', () => {
-  setupDateBar();
-  setupPermitFilterMenu();
-});
