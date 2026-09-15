@@ -1789,51 +1789,46 @@ body.change-log-open {
 .changelog-entry { margin: 0 !important; }
 .changelog-version { display: flex; align-items: center; gap: 8px; }
 
-
-/* Data Management submenu */
-.settings-management-option { display:flex !important; align-items:center; justify-content:space-between; gap:8px; }
-.settings-management-item { width:100%; }
-
-/* Compact permit filter beside search */
-.search-filter-wrap { display:flex; align-items:center; gap:8px; position:relative; }
-.search-filter-wrap #search { min-width:0; }
-.permit-filter-wrap { position:relative; flex:0 0 auto; }
-.permit-filter-button { width:42px; height:38px; padding:8px !important; display:inline-flex; align-items:center; justify-content:center; }
-.permit-filter-button svg { width:20px; height:20px; fill:none; stroke:#2f80ed; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-.permit-filter-button.active { background:#eaf2ff !important; border-color:#2f80ed !important; }
-.permit-filter-button.active svg { stroke:#2f80ed; }
-.permit-filter-menu { position:absolute; top:calc(100% + 8px); right:0; z-index:50; width:min(330px, calc(100vw - 32px)); padding:12px; background:#fff; border:1px solid #d9e2ea; border-radius:10px; box-shadow:0 12px 30px rgba(31,78,120,.16); }
-.permit-filter-menu-title { font-size:13px; font-weight:700; color:#1f2933; padding:4px 8px 8px; }
-.permit-filter-option { width:100%; display:flex; align-items:flex-start; gap:10px; padding:10px 8px !important; border:0 !important; border-radius:7px !important; background:#fff !important; text-align:left; }
-.permit-filter-option + .permit-filter-option { border-top:1px solid #edf1f4 !important; border-radius:0 !important; }
-.permit-filter-option:hover, .permit-filter-option.active { background:#f5f9ff !important; }
-.permit-filter-check { flex:0 0 16px; width:16px; height:16px; margin-top:2px; border:1.5px solid #9aa8b5; border-radius:3px; box-sizing:border-box; }
-.permit-filter-option.active .permit-filter-check { border-color:#2f80ed; background:#2f80ed; box-shadow:inset 0 0 0 3px #fff; }
-.permit-filter-option strong { display:block; color:#1f4e78; font-size:13px; line-height:1.3; }
-.permit-filter-option small { display:block; color:#68737d; font-size:11px; line-height:1.35; margin-top:2px; }
-@media (max-width:800px) { .search-filter-wrap { width:100%; } .search-filter-wrap #search { flex:1 1 auto; } .permit-filter-button { width:42px; height:38px; } }
-
-/* Keep the Data Management unread badge blue and centered like Notifications. */
-#settingsDataManagement .bug-reports-badge {
-  position:static !important;
-  display:inline-flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  vertical-align:middle !important;
-  box-sizing:border-box !important;
-  min-width:17px !important;
-  height:17px !important;
-  padding:0 4px !important;
-  margin:0 0 0 8px !important;
-  border-radius:999px !important;
-  background:#2f80ed !important;
-  color:#fff !important;
-  font-size:10px !important;
-  font-weight:700 !important;
-  line-height:17px !important;
-  text-align:center !important;
-  border:1px solid #fff !important;
-  font-variant-numeric:tabular-nums !important;
+/* ============================================================
+   DATA MANAGEMENT + BUG REPORT BADGES
+   ============================================================ */
+.data-management-badge,
+.bug-reports-badge {
+  position: static !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  min-width: 17px !important;
+  height: 17px !important;
+  padding: 0 4px !important;
+  margin: 0 0 0 8px !important;
+  border-radius: 999px !important;
+  background: #2f80ed !important;
+  color: #fff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 17px !important;
+  text-align: center !important;
+  border: 1px solid #fff !important;
+  font-variant-numeric: tabular-nums !important;
 }
-#settingsDataManagement .bug-reports-badge[style*="display: none"] { display:none !important; }
-#settingsDataManagement .bug-reports-badge[style*="display: inline-flex"] { display:inline-flex !important; }
+.data-management-badge[hidden],
+.bug-reports-badge[hidden] {
+  display: none !important;
+}
+.settings-import-option {
+  display: block !important;
+  width: 100% !important;
+  text-align: left !important;
+  padding: 12px 14px !important;
+  background: #fff !important;
+  border: 1px solid #cbd5df !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+}
+.settings-import-option:hover {
+  background: #f7fafc !important;
+}
