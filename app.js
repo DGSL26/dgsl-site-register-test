@@ -1315,7 +1315,24 @@ function esc(x = '') {
 // RENDER
 // ============================================================
 
+function updateSummaryCardSelection() {
+  document.querySelectorAll('[data-filter-card]').forEach(card => {
+    const selected = (card.dataset.filterCard || 'All') === filter;
+    card.classList.toggle('summary-card-selected', selected);
+    card.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  });
+
+  const label = filter === 'All'
+    ? 'Showing: All Work Permits'
+    : `Showing: ${filter.replace('Work Permit on Hold', 'Work Permits On Hold').replace('Work Permit Open', 'Open Work Permits').replace('Work Permit Closed', 'Closed Work Permits')}`;
+
+  const indicator = document.getElementById('activeFilterLabel');
+  if (indicator) indicator.textContent = label;
+}
+
 function render() {
+
+  updateSummaryCardSelection();
 
   const q =
     $('#search')

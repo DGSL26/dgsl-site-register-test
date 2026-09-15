@@ -371,6 +371,50 @@ main {
 }
 
 
+
+/* Summary cards: clearly show which dashboard filter is selected. */
+.cards article.summary-card-clickable {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.cards article.summary-card-clickable:focus-visible {
+  outline: 2px solid #2f80ed;
+  outline-offset: 2px;
+}
+
+.cards article.summary-card-selected {
+  border-width: 2px !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.10);
+}
+
+.cards article.blue.summary-card-selected {
+  border-color: #2f80ed !important;
+  background: #f5f9ff !important;
+}
+
+.cards article.amber.summary-card-selected {
+  border-color: #d99b24 !important;
+  background: #fffaf0 !important;
+}
+
+.cards article.green.summary-card-selected {
+  border-color: #3b8f5a !important;
+  background: #f4fbf7 !important;
+}
+
+.cards article.red.summary-card-selected {
+  border-color: #c84b4b !important;
+  background: #fff6f6 !important;
+}
+
+.active-filter-label {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b6670;
+}
+
 /* ============================================================
    PANEL
    ============================================================ */
