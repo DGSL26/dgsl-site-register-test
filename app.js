@@ -141,34 +141,25 @@ function openSettingsDialog() {
           </div>
           <button type="button" class="icon" id="closeSettings" aria-label="Close">×</button>
         </div>
-        <div class="settings-options" id="settingsMainView">
+        <div class="settings-options">
           <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
           <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
-          <button type="button" id="settingsManagement" class="settings-option settings-management-button" style="position:relative;">Data Management <span id="settingsManagementBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
+          <button type="button" id="settingsBugReports" class="settings-option" style="display:none; position:relative;">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
+          <div class="settings-section">
+            <div class="settings-section-title">Data Management</div>
+            <button type="button" id="settingsExport" class="settings-option">Export Data</button>
+            <label class="settings-option settings-import-option" for="settingsImport">
+              <span>Import Data</span>
+              <input id="settingsImport" type="file" accept="application/json" hidden>
+            </label>
+          </div>
           <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
-        </div>
-        <div class="settings-options settings-management-view" id="settingsManagementView" hidden>
-          <button type="button" id="settingsBugReports" class="settings-option" style="position:relative;">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
-          <button type="button" id="settingsExport" class="settings-option">Export Data</button>
-          <label class="settings-option settings-import-option" for="settingsImport">
-            <span>Import Data</span>
-            <input id="settingsImport" type="file" accept="application/json" hidden>
-          </label>
         </div>
       </div>
     `;
     document.body.appendChild(dialog);
 
-    dialog.querySelector('#closeSettings').onclick = () => {
-      dialog.querySelector('#settingsMainView').hidden = false;
-      dialog.querySelector('#settingsManagementView').hidden = true;
-      dialog.close();
-    };
-    dialog.querySelector('#settingsManagement').onclick = () => {
-      dialog.querySelector('#settingsMainView').hidden = true;
-      dialog.querySelector('#settingsManagementView').hidden = false;
-      refreshBugReportsBadge();
-    };
+    dialog.querySelector('#closeSettings').onclick = () => dialog.close();
     dialog.querySelector('#settingsChangeLog').onclick = () => {
       dialog.close();
       openChangeLogDialog();
@@ -217,8 +208,6 @@ function openSettingsDialog() {
       showLogoutConfirmDialog();
     };
   }
-  dialog.querySelector('#settingsMainView').hidden = false;
-  dialog.querySelector('#settingsManagementView').hidden = true;
   if (!dialog.open) dialog.showModal();
   showBugReportsButtonForAdmin();
 }
@@ -238,16 +227,13 @@ function bugReportEscape(value) {
 }
 
 function updateBugReportsBadge(unreadCount) {
+  const button = document.getElementById('settingsBugReports');
+  const badge = document.getElementById('bugReportsBadge');
+  if (!button || !badge) return;
   const count = Number(unreadCount) || 0;
-  const badges = [
-    document.getElementById('bugReportsBadge'),
-    document.getElementById('settingsManagementBadge')
-  ].filter(Boolean);
-  badges.forEach(badge => {
-    badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
-    badge.className = 'notification-badge bug-reports-badge';
-    badge.style.display = count > 0 ? 'inline-flex' : 'none';
-  });
+  badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
+  badge.className = 'notification-badge bug-reports-badge';
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
 async function refreshBugReportsBadge() {
@@ -1364,9 +1350,15 @@ function updateSummaryCardSelection() {
     card.setAttribute('aria-pressed', selected ? 'true' : 'false');
   });
 
-  const label = filter === 'All'
-    ? 'Showing: All Work Permits'
-    : `Showing: ${filter.replace('Work Permit on Hold', 'Work Permits On Hold').replace('Work Permit Open', 'Open Work Permits').replace('Work Permit Closed', 'Closed Work Permits')}`;
+  const labelMap = {
+    'All': 'Showing: All Work Permits',
+    'Open/On Hold': 'Showing: Open/On Hold',
+    'Open Longer Than 1 Week': 'Showing: Open Longer Than 1 Week',
+    'Work Permit Open': 'Showing: Open Work Permits',
+    'Work Permit Closed': 'Showing: Closed Work Permits',
+    'Work Permit on Hold': 'Showing: Work Permits On Hold'
+  };
+  const label = labelMap[filter] || 'Showing: All Work Permits';
 
   const indicator = document.getElementById('activeFilterLabel');
   if (indicator) indicator.textContent = label;
@@ -1385,21 +1377,33 @@ function render() {
 
   const filtered =
     records
-      .filter(x =>
+      .filter(x => {
+        let matchesFilter = true;
 
-        (
-          filter === 'All' ||
-          x.status === filter
-        )
+        if (filter === 'Open/On Hold') {
+          matchesFilter =
+            x.status === 'Work Permit Open' ||
+            x.status === 'Work Permit on Hold';
+        } else if (filter === 'Open Longer Than 1 Week') {
+          if (x.status !== 'Work Permit Open' || !x.handoverDate) {
+            matchesFilter = false;
+          } else {
+            const handover = new Date(`${x.handoverDate}T00:00:00`);
+            const cutoff = new Date();
+            cutoff.setHours(0, 0, 0, 0);
+            cutoff.setDate(cutoff.getDate() - 7);
+            matchesFilter = handover < cutoff;
+          }
+        } else if (filter !== 'All') {
+          matchesFilter = x.status === filter;
+        }
 
-        &&
-
-        Object.values(x)
-          .join(' ')
-          .toLowerCase()
-          .includes(q)
-
-      )
+        return matchesFilter &&
+          Object.values(x)
+            .join(' ')
+            .toLowerCase()
+            .includes(q);
+      })
       .sort((a, b) => {
         const aDate = String(a.handoverDate || '');
         const bDate = String(b.handoverDate || '');
@@ -1925,7 +1929,6 @@ function showRowMoreDialog(record) {
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         ${currentUser ? '<button type="button" id="rowMoreCopy">Copy</button>' : '<button type="button" id="rowMoreDownload">Download PDF</button>'}
         <button type="button" id="rowMoreShare">Share</button>
-        ${currentUser ? '<button type="button" id="rowMoreDelete">Delete</button>' : ''}
       </div>
       <div style="margin-top:18px;">
         <button type="button" id="rowMoreCancel">Cancel</button>
@@ -1961,28 +1964,6 @@ function showRowMoreDialog(record) {
     dialog.close();
     setTimeout(() => sharePdfToDevice(record), 0);
   };
-
-  const moreDeleteButton = dialog.querySelector('#rowMoreDelete');
-  if (moreDeleteButton) {
-    moreDeleteButton.onclick = async () => {
-      if (!confirm('Delete this handover record?')) return;
-      dialog.close();
-      try {
-        if (Array.isArray(record.photos)) {
-          for (const url of record.photos) {
-            await deletePhoto(url);
-          }
-        }
-        const { error } = await supabaseClient.from('handovers_test').delete().eq('id', record.id);
-        if (error) throw error;
-        if (editing?.id === record.id) editing = null;
-        await loadRecords();
-      } catch (error) {
-        console.error('Delete handover error:', error);
-        alert('Unable to delete the handover.');
-      }
-    };
-  }
 
   if (!dialog.open) dialog.showModal();
 }
@@ -3764,11 +3745,110 @@ document
 
 
 // ============================================================
-// SEARCH
+// SEARCH + REGISTER FILTER
 // ============================================================
 
 $('#search').oninput =
   render;
+
+function setupRegisterFilter() {
+  const search = document.getElementById('search');
+  if (!search) return;
+
+  const actions = search.closest('.actions');
+  if (!actions) return;
+
+  // Remove any older/broken filter control before creating the clean version.
+  actions.querySelectorAll('[data-register-filter-button], .register-filter-menu').forEach(el => el.remove());
+
+  actions.style.position = 'relative';
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.id = 'registerFilterButton';
+  button.dataset.registerFilterButton = 'true';
+  button.className = 'register-filter-button';
+  button.setAttribute('aria-label', 'Filter work permits');
+  button.setAttribute('title', 'Filter work permits');
+  button.setAttribute('aria-expanded', 'false');
+  button.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 5h16l-6.2 7.2v5.1l-3.6 1.7v-6.8L4 5z"></path>
+    </svg>
+  `;
+
+  const menu = document.createElement('div');
+  menu.className = 'register-filter-menu';
+  menu.hidden = true;
+  menu.innerHTML = `
+    <div class="register-filter-title">Filter Work Permits</div>
+    <button type="button" class="register-filter-option" data-register-filter="Open/On Hold">
+      <span class="register-filter-check"></span>
+      <span>
+        <strong>Open/On Hold</strong>
+        <small>Show all open and on hold permits</small>
+      </span>
+    </button>
+    <button type="button" class="register-filter-option" data-register-filter="Open Longer Than 1 Week">
+      <span class="register-filter-check"></span>
+      <span>
+        <strong>Open Longer Than 1 Week</strong>
+        <small>Show open permits older than 7 days</small>
+      </span>
+    </button>
+    <button type="button" class="register-filter-clear" data-register-filter="All">
+      Clear filter
+    </button>
+  `;
+
+  actions.appendChild(button);
+  actions.appendChild(menu);
+
+  const updateMenuState = () => {
+    menu.querySelectorAll('[data-register-filter]').forEach(option => {
+      option.classList.toggle(
+        'active',
+        option.dataset.registerFilter === filter
+      );
+    });
+    const active = filter === 'Open/On Hold' || filter === 'Open Longer Than 1 Week';
+    button.classList.toggle('active', active);
+  };
+
+  const closeMenu = () => {
+    menu.hidden = true;
+    button.setAttribute('aria-expanded', 'false');
+  };
+
+  button.onclick = event => {
+    event.stopPropagation();
+    menu.hidden = !menu.hidden;
+    button.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
+    updateMenuState();
+  };
+
+  menu.querySelectorAll('[data-register-filter]').forEach(option => {
+    option.onclick = event => {
+      event.stopPropagation();
+      filter = option.dataset.registerFilter || 'All';
+      closeMenu();
+      render();
+      updateMenuState();
+    };
+  });
+
+  document.addEventListener('click', event => {
+    if (!menu.hidden && !actions.contains(event.target)) closeMenu();
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !menu.hidden) closeMenu();
+  });
+
+  updateMenuState();
+}
+
+setupRegisterFilter();
 
 
 // ============================================================
@@ -4178,6 +4258,1363 @@ startApp();
 
 
 
+
+async function generatePdf(viewOnly = false) {
+
+  try {
+
+    const {
+      jsPDF
+    } =
+      window.jspdf;
+
+
+    const pdf =
+      new jsPDF({
+
+        orientation:
+          'portrait',
+
+        unit:
+          'mm',
+
+        format:
+          'a4'
+
+      });
+
+
+    const margin =
+      15;
+
+
+    const pageWidth =
+      210;
+
+
+    let y =
+      20;
+
+
+    const logoData =
+      await loadLogoForPdf();
+
+
+    // --------------------------------------------------------
+    // TITLE
+    // --------------------------------------------------------
+
+    pdf.setFontSize(
+      20
+    );
+
+
+    pdf.setFont(
+      undefined,
+      'bold'
+    );
+
+
+    pdf.text(
+      'DGSL SITE HANDOVER',
+      margin,
+      y
+    );
+
+
+    // Correct logo proportions
+    if (logoData) {
+
+      pdf.addImage(
+        logoData,
+        'PNG',
+        140,
+        10,
+        55,
+        11.1
+      );
+
+    }
+
+
+    y += 8;
+
+
+    pdf.setFontSize(
+      14
+    );
+
+
+    pdf.setFont(
+      undefined,
+      'bold'
+    );
+
+
+    pdf.text(
+      'Knocksedan, PH3',
+      margin,
+      y
+    );
+
+
+    y += 10;
+
+
+    pdf.line(
+      margin,
+      y,
+      pageWidth - margin,
+      y
+    );
+
+
+
+
+    await Promise.all([
+      $('#contractorSignature')?._signatureReady,
+      $('#dgslSignature')?._signatureReady
+    ].filter(Boolean));
+
+    const data = {
+  zone: form.elements.zone?.value || '',
+  contractor: form.elements.contractor?.value || '',
+  drawing: form.elements.drawing?.value || '',
+  level:
+  form.elements.level?.value === 'Other'
+    ? document.getElementById('levelOther').value || 'Other'
+    : form.elements.level?.value || '',
+
+trade:
+  form.elements.trade?.value === 'Other'
+    ? document.getElementById('tradeOther').value || 'Other'
+    : form.elements.trade?.value || '',
+
+foreman:
+  form.elements.foreman?.value === 'Other'
+    ? document.getElementById('foremanOther').value || 'Other'
+    : form.elements.foreman?.value || '',
+
+healthSafetyScaffolding:
+  form.elements.healthSafetyScaffolding?.value === 'Other'
+    ? document.getElementById('healthSafetyScaffoldingOther').value || 'Other'
+    : form.elements.healthSafetyScaffolding?.value || '',
+  description: form.elements.description?.value || '',
+  status:
+  form.elements.status?.value === 'Other'
+    ? document.getElementById('statusOther').value || 'Other'
+    : form.elements.status?.value || '',
+  handoverDate: form.elements.handoverDate?.value || '',
+  takeBackDate: form.elements.takeBackDate?.value || '',
+  takeBackCompleteDrawings:
+  form.elements.takeBackCompleteDrawings?.value === 'Other'
+    ? document.getElementById('takeBackCompleteDrawingsOther').value || 'Other'
+    : form.elements.takeBackCompleteDrawings?.value || '',
+  takeBackHousekeeping:
+  form.elements.takeBackHousekeeping?.value === 'Other'
+    ? document.getElementById('takeBackHousekeepingOther').value || 'Other'
+    : form.elements.takeBackHousekeeping?.value || '',
+  takeBackSnagCompleted:
+  form.elements.takeBackSnagCompleted?.value === 'Other'
+    ? document.getElementById('takeBackSnagCompletedOther').value || 'Other'
+    : form.elements.takeBackSnagCompleted?.value || '',
+  notes: form.elements.notes?.value || '',
+  contractorSigner:
+    form.elements.contractorSigner?.value || '',
+  dgslSigner:
+    form.elements.dgslSigner?.value || ''
+};
+
+
+    // STATUS BUBBLE — top right, directly beneath the header line.
+    const statusColors = {
+      'Work Permit Open': [246, 196, 83],
+      'Work Permit Closed': [122, 203, 138],
+      'Work Permit on Hold': [239, 119, 119]
+    };
+
+    const statusColor =
+      statusColors[data.status] || [217, 222, 227];
+
+    const statusBubbleX = 145;
+    const statusBubbleY = y + 3;
+    const statusBubbleWidth = 50;
+    const statusBubbleHeight = 9;
+
+    pdf.setFillColor(
+      statusColor[0],
+      statusColor[1],
+      statusColor[2]
+    );
+
+    pdf.roundedRect(
+      statusBubbleX,
+      statusBubbleY,
+      statusBubbleWidth,
+      statusBubbleHeight,
+      3,
+      3,
+      'F'
+    );
+
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(34, 34, 34);
+
+    const statusText = data.status || '';
+    const statusTextLines =
+      pdf.splitTextToSize(
+        statusText,
+        statusBubbleWidth - 6
+      );
+
+    const statusTextY =
+      statusBubbleY +
+      statusBubbleHeight / 2 +
+      (statusTextLines.length === 1 ? 1.1 : 0);
+
+    pdf.text(
+      statusTextLines,
+      statusBubbleX + statusBubbleWidth / 2,
+      statusTextY,
+      { align: 'center' }
+    );
+
+    pdf.setTextColor(0, 0, 0);
+
+
+    y += 8;
+
+    // --------------------------------------------------------
+    // PDF FIELD
+    // Fixed label/value columns so text cannot overlap.
+    // --------------------------------------------------------
+
+    function addField(
+      label,
+      value
+    ) {
+
+      pdf.setFontSize(
+        10
+      );
+
+
+      // Dedicated space for the label.
+      const labelWidth =
+        55;
+
+
+      // Value starts after the label area.
+      const valueX =
+        margin + 60;
+
+
+      // Remaining page width for the value.
+      const valueWidth =
+        pageWidth -
+        margin -
+        valueX;
+
+
+      // Wrap long labels.
+      const labelLines =
+        pdf.splitTextToSize(
+          `${label}:`,
+          labelWidth
+        );
+
+
+      // Wrap long values.
+      const valueLines =
+        pdf.splitTextToSize(
+          value || '',
+          valueWidth
+        );
+
+
+      // Label
+      pdf.setFont(
+        undefined,
+        'bold'
+      );
+
+
+      pdf.text(
+        labelLines,
+        margin,
+        y
+      );
+
+
+      // Value
+      pdf.setFont(
+        undefined,
+        'normal'
+      );
+
+
+      pdf.text(
+        valueLines,
+        valueX,
+        y
+      );
+
+
+      // Move down far enough for whichever side
+      // contains the most lines.
+      const lineCount =
+        Math.max(
+          labelLines.length,
+          valueLines.length
+        );
+
+
+      y +=
+        Math.max(
+          7,
+          lineCount * 5
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // HANDOVER DETAILS
+    // --------------------------------------------------------
+
+    addField(
+      'Zone / Area',
+      data.zone
+    );
+
+
+    addField(
+      'Sub Contractor / Company Name',
+      data.contractor
+    );
+
+
+    addField(
+      'Drawing / Reference',
+      data.drawing
+    );
+
+
+    // Show "Outstanding" in red in the PDF.
+    if (String(data.level || '').trim().toLowerCase() === 'outstanding') {
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Safety Documents:', margin, y);
+      pdf.setTextColor(211, 47, 47);
+      pdf.setFont(undefined, 'normal');
+      pdf.text('Outstanding', margin + 60, y);
+      pdf.setTextColor(0, 0, 0);
+      y += 7;
+    } else {
+      addField(
+        'Safety Documents',
+        data.level
+      );
+    }
+
+
+    addField(
+      'Housekeeping at time of Take Over',
+      data.trade
+    );
+
+
+    addField(
+      'Materials Checks',
+      data.foreman
+    );
+
+
+    addField(
+      'Health & Safety - Scaffolding / Handrails',
+      data.healthSafetyScaffolding
+    );
+
+
+    addField(
+      'Work Description',
+      data.description
+    );
+
+
+    addField(
+      'Handover Date',
+      formatDate(data.handoverDate)
+    );
+
+
+    // --------------------------------------------------------
+    // CHECKLIST
+    // --------------------------------------------------------
+
+    y += 5;
+
+
+    pdf.setFont(
+      undefined,
+      'bold'
+    );
+
+
+    pdf.setFontSize(
+      12
+    );
+
+
+    pdf.text(
+      'Checklist',
+      margin,
+      y
+    );
+
+
+    y += 7;
+
+
+    pdf.setFontSize(
+      10
+    );
+
+
+    pdf.setFont(
+      undefined,
+      'normal'
+    );
+
+
+    const checklistItems = [
+
+      'Current approved drawings, specification, RFI responses, setting-out data and revisions available at workface.',
+
+      'Task-specific RAMS briefed; workers inducted; Safe Pass / CSCS / trade competence checked as applicable.',
+
+      'Work area, access, lighting, scaffold / edge protection, temporary works, previous trade and substrate accepted',
+
+      'Materials / products approved and traceable; plant, tools and test equipment inspected / certified / calibrated.',
+
+      'Interfaces with adjacent trades, services, deliveries, exclusion zones and shared access agreed.',
+
+      'Protection of completed work plus weather, water, dust, noise and environmental controls agreed.',
+
+      'Hold / Witness Points, first-off, photos, tests and QA records identified; emergency, waste, housekeeping and security controls agreed.'
+
+    ];
+
+
+    const checklist =
+      getTakeBackChecklist();
+
+
+    checklistItems.forEach(
+      (item, index) => {
+
+        if (
+          y > 265
+        ) {
+
+          pdf.addPage();
+
+          y =
+            20;
+
+
+          if (logoData) {
+
+            pdf.addImage(
+              logoData,
+              'PNG',
+              140,
+              10,
+              55,
+              11.1
+            );
+
+          }
+
+        }
+
+
+        const itemNumber =
+          index + 1;
+
+
+        const answer =
+          checklist[itemNumber] ||
+          'yes';
+
+
+        const lines =
+          pdf.splitTextToSize(
+            `${itemNumber}. ${item}`,
+            145
+          );
+
+
+        pdf.text(
+          lines,
+          margin,
+          y
+        );
+
+
+        pdf.setFont(
+          undefined,
+          'bold'
+        );
+
+
+        pdf.text(
+          'Yes',
+          165,
+          y
+        );
+
+
+        pdf.text(
+          'No',
+          185,
+          y
+        );
+
+
+        pdf.setFont(
+          undefined,
+          'normal'
+        );
+
+
+        const boxY =
+          y - 3;
+
+
+        pdf.rect(
+          160,
+          boxY,
+          4,
+          4
+        );
+
+
+        pdf.rect(
+          180,
+          boxY,
+          4,
+          4
+        );
+
+
+        if (
+          answer === 'yes'
+        ) {
+
+          pdf.setFont(
+            undefined,
+            'bold'
+          );
+
+
+          pdf.text(
+            'X',
+            161,
+            y
+          );
+
+
+          pdf.setFont(
+            undefined,
+            'normal'
+          );
+
+        }
+
+
+        if (
+          answer === 'no'
+        ) {
+
+          pdf.setFont(
+            undefined,
+            'bold'
+          );
+
+
+          pdf.text(
+            'X',
+            181,
+            y
+          );
+
+
+          pdf.setFont(
+            undefined,
+            'normal'
+          );
+
+        }
+
+
+        y +=
+          Math.max(
+            8,
+            lines.length * 5
+          ) +
+          2;
+
+      }
+    );
+
+
+    // --------------------------------------------------------
+    // PAGE 2: DGSL TAKE BACK DETAILS
+    // --------------------------------------------------------
+
+    // Keep the Take Back section on page 2.
+    pdf.addPage();
+
+    y = 20;
+
+    if (logoData) {
+
+      pdf.addImage(
+        logoData,
+        'PNG',
+        140,
+        10,
+        55,
+        11.1
+      );
+
+    }
+
+    pdf.setFont(
+      undefined,
+      'bold'
+    );
+
+    pdf.setFontSize(
+      12
+    );
+
+    pdf.text(
+      'DGSL Take Back Details',
+      margin,
+      y
+    );
+
+    y += 7;
+
+    pdf.setFontSize(
+      10
+    );
+
+    addField(
+      'Take Back Date',
+      formatDate(data.takeBackDate)
+    );
+
+    addField(
+      'All works complete to drawings',
+      data.takeBackCompleteDrawings
+    );
+
+    addField(
+      'Housekeeping at time of Take Back',
+      data.takeBackHousekeeping
+    );
+
+    addField(
+      'DG to Snag completed works',
+      data.takeBackSnagCompleted
+    );
+
+    // --------------------------------------------------------
+    // NOTES
+    // --------------------------------------------------------
+
+    y += 2;
+
+    pdf.setFont(
+      undefined,
+      'bold'
+    );
+
+    pdf.text(
+      'Notes / Outstanding Items',
+      margin,
+      y
+    );
+
+    y += 6;
+
+    pdf.setFont(
+      undefined,
+      'normal'
+    );
+
+    const noteLines =
+      pdf.splitTextToSize(
+        data.notes || '',
+        pageWidth -
+          margin * 2
+      );
+
+    pdf.text(
+      noteLines,
+      margin,
+      y
+    );
+
+    y +=
+      Math.max(
+        12,
+        noteLines.length * 5
+      );
+
+    // --------------------------------------------------------
+    // SIGNATURES
+    // --------------------------------------------------------
+
+    y += 2;
+
+    pdf.setFont(
+      undefined,
+      'bold'
+    );
+
+    pdf.text(
+      'Signatures',
+      margin,
+      y
+    );
+
+    y += 7;
+
+    pdf.setFont(
+      undefined,
+      'normal'
+    );
+
+    pdf.text(
+      `Sub-Contractor Name: ${
+        data.contractorSigner || ''
+      }`,
+      margin,
+      y
+    );
+
+    y += 5;
+
+    pdf.addImage(
+      $('#contractorSignature')
+        .toDataURL(
+          'image/png'
+        ),
+      'PNG',
+      margin,
+      y,
+      65,
+      20
+    );
+
+    y += 26;
+
+    pdf.text(
+      `DGSL Representative: ${
+        data.dgslSigner || ''
+      }`,
+      margin,
+      y
+    );
+
+    y += 5;
+
+    pdf.addImage(
+      $('#dgslSignature')
+        .toDataURL(
+          'image/png'
+        ),
+      'PNG',
+      margin,
+      y,
+      65,
+      20
+    );
+
+    y += 25;
+
+    // --------------------------------------------------------
+    // SITE PHOTOS
+    // Photos are placed immediately below the DGSL
+    // Representative signature and arranged two per row
+    // to help keep the document to two pages.
+    // --------------------------------------------------------
+
+    const photoUrls =
+      editing?.photos || [];
+
+    if (
+      photoUrls.length > 0
+    ) {
+
+      pdf.setFontSize(
+        12
+      );
+
+      pdf.setFont(
+        undefined,
+        'bold'
+      );
+
+      pdf.text(
+        'SITE PHOTOS',
+        margin,
+        y
+      );
+
+      y += 6;
+
+      const photoMaxWidth = 78;
+      const photoMaxHeight = 42;
+      const photoGap = 4;
+      const secondPhotoX = margin + photoMaxWidth + photoGap;
+
+      let photoRowY = y;
+      let photoColumn = 0;
+      let rowHeight = 0;
+
+      for (
+        const url
+        of photoUrls
+      ) {
+
+        try {
+
+          const imageData =
+            await loadImageForPdf(
+              url
+            );
+
+          const dimensions =
+            await getImageDimensions(
+              imageData
+            );
+
+          let width = photoMaxWidth;
+          let height =
+            (dimensions.height / dimensions.width) * width;
+
+          if (height > photoMaxHeight) {
+            height = photoMaxHeight;
+            width =
+              (dimensions.width / dimensions.height) * height;
+          }
+
+          // If the photos cannot fit on page 2, start a new page.
+          // This keeps the layout compact while avoiding clipped photos.
+          if (
+            photoRowY + height > 285
+          ) {
+
+            pdf.addPage();
+
+            photoRowY = 20;
+            photoColumn = 0;
+            rowHeight = 0;
+
+            if (logoData) {
+
+              pdf.addImage(
+                logoData,
+                'PNG',
+                140,
+                10,
+                55,
+                11.1
+              );
+
+            }
+
+          }
+
+          const photoX =
+            photoColumn === 0
+              ? margin
+              : secondPhotoX;
+
+          pdf.addImage(
+            imageData,
+            'JPEG',
+            photoX,
+            photoRowY,
+            width,
+            height
+          );
+
+          rowHeight =
+            Math.max(
+              rowHeight,
+              height
+            );
+
+          if (photoColumn === 0) {
+
+            photoColumn = 1;
+
+          } else {
+
+            photoColumn = 0;
+            photoRowY += rowHeight + 5;
+            rowHeight = 0;
+
+          }
+
+        } catch (error) {
+
+          console.error(
+            'Could not add photo to PDF:',
+            error
+          );
+
+        }
+
+      }
+
+    }
+
+    // --------------------------------------------------------
+    // SAVE PDF
+    // --------------------------------------------------------
+
+    const safeZone =
+      (
+        data.zone ||
+        'Handover'
+      )
+        .replace(
+          /[^a-z0-9-_ ]/gi,
+          ''
+        )
+        .replace(
+          /\s+/g,
+          '-'
+        );
+
+
+    if (viewOnly) {
+      return pdf.output('blob');
+    } else {
+      pdf.save(
+        `DGSL-${safeZone}-Handover-${today()}.pdf`
+      );
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      'PDF error:',
+      error
+    );
+
+
+    alert(
+      'There was a problem creating the PDF.\n\n' +
+      error.message
+    );
+
+  }
+
+}
+
+
+// ============================================================
+// LOAD LOGO FOR PDF
+// ============================================================
+
+function loadLogoForPdf() {
+
+  return new Promise(
+    resolve => {
+
+      const img =
+        new Image();
+
+
+      img.onload =
+        () => {
+
+          const canvas =
+            document.createElement(
+              'canvas'
+            );
+
+
+          canvas.width =
+            img.naturalWidth;
+
+
+          canvas.height =
+            img.naturalHeight;
+
+
+          const ctx =
+            canvas.getContext(
+              '2d'
+            );
+
+
+          ctx.drawImage(
+            img,
+            0,
+            0
+          );
+
+
+          resolve(
+            canvas.toDataURL(
+              'image/png'
+            )
+          );
+
+        };
+
+
+      img.onerror =
+        () => {
+
+          console.error(
+            `Could not load ${LOGO_FILE}`
+          );
+
+
+          resolve(
+            null
+          );
+
+        };
+
+
+      img.src =
+        LOGO_FILE;
+
+    }
+  );
+
+}
+
+
+// ============================================================
+// LOAD IMAGE FOR PDF
+// ============================================================
+
+function loadImageForPdf(
+  url
+) {
+
+  return new Promise(
+    (
+      resolve,
+      reject
+    ) => {
+
+      const img =
+        new Image();
+
+
+      img.crossOrigin =
+        'anonymous';
+
+
+      img.onload =
+        () => {
+
+          const canvas =
+            document.createElement(
+              'canvas'
+            );
+
+
+          canvas.width =
+            img.naturalWidth;
+
+
+          canvas.height =
+            img.naturalHeight;
+
+
+          const ctx =
+            canvas.getContext(
+              '2d'
+            );
+
+
+          ctx.drawImage(
+            img,
+            0,
+            0
+          );
+
+
+          resolve(
+            canvas.toDataURL(
+              'image/jpeg',
+              0.85
+            )
+          );
+
+        };
+
+
+      img.onerror =
+        reject;
+
+
+      img.src =
+        url;
+
+    }
+  );
+
+}
+
+
+// ============================================================
+// ADD IMAGE TO PDF
+// ============================================================
+
+async function addImageToPdf(
+  pdf,
+  imageData,
+  y,
+  margin
+) {
+
+  if (
+    y > 260
+  ) {
+
+    pdf.addPage();
+
+
+    y =
+      20;
+
+
+    const logoData =
+      await loadLogoForPdf();
+
+
+    if (logoData) {
+
+      pdf.addImage(
+        logoData,
+        'PNG',
+        140,
+        10,
+        55,
+        11.1
+      );
+
+    }
+
+  }
+
+
+  const dimensions =
+    await getImageDimensions(
+      imageData
+    );
+
+
+  const maxWidth =
+    80;
+
+
+  const maxHeight =
+    65;
+
+
+  let width =
+    maxWidth;
+
+
+  let height =
+    (
+      dimensions.height /
+      dimensions.width
+    ) *
+    width;
+
+
+  if (
+    height >
+    maxHeight
+  ) {
+
+    height =
+      maxHeight;
+
+
+    width =
+      (
+        dimensions.width /
+        dimensions.height
+      ) *
+      height;
+
+  }
+
+
+  if (
+    y + height >
+    280
+  ) {
+
+    pdf.addPage();
+
+
+    y =
+      20;
+
+
+    const logoData =
+      await loadLogoForPdf();
+
+
+    if (logoData) {
+
+      pdf.addImage(
+        logoData,
+        'PNG',
+        140,
+        10,
+        55,
+        11.1
+      );
+
+    }
+
+  }
+
+
+  pdf.addImage(
+    imageData,
+    'JPEG',
+    margin,
+    y,
+    width,
+    height
+  );
+
+
+  return y +
+    height +
+    8;
+
+}
+
+
+// ============================================================
+// IMAGE DIMENSIONS
+// ============================================================
+
+function getImageDimensions(
+  src
+) {
+
+  return new Promise(
+    resolve => {
+
+      const img =
+        new Image();
+
+
+      img.onload =
+        () => {
+
+          resolve({
+
+            width:
+              img.width,
+
+            height:
+              img.height
+
+          });
+
+        };
+
+
+      img.src =
+        src;
+
+    }
+  );
+
+}
+
+
+// ============================================================
+// START APPLICATION
+// ============================================================
+
+async function startApp() {
+
+  try {
+
+    addLogoToForm();
+
+    await loadSupabase();
+
+    const { data: sessionData } =
+      await supabaseClient.auth.getSession();
+
+    currentUser =
+      sessionData?.session?.user || null;
+
+    ensureAuthUi();
+    updateAuthUi();
+
+    supabaseClient.auth.onAuthStateChange(
+      (_event, session) => {
+        currentUser =
+          session?.user || null;
+
+        updateAuthUi();
+        render();
+        refreshNotificationState();
+      }
+    );
+
+    await loadRecords();
+
+    setupRealtime();
+    await refreshNotificationState();
+
+  } catch (error) {
+
+    console.error(
+      'Startup error:',
+      error
+    );
+
+
+    alert(
+      'The DGSL Site Register could not connect to Supabase.'
+    );
+
+  }
+
+}
+
+
+startApp();
 
 // Prevent iOS touch scrolling from leaking out of the PDF viewer.
 document.addEventListener(
