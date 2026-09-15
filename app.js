@@ -274,7 +274,9 @@ function updateBugReportsBadge(unreadCount) {
     if (!badge) return;
     badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
     badge.className = 'notification-badge bug-reports-badge';
-    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+    // Use an inline !important rule so the badge can never be forced visible
+    // by the notification CSS when there are zero unread reports.
+    badge.style.setProperty('display', count > 0 ? 'inline-flex' : 'none', 'important');
   });
 }
 
