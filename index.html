@@ -31,6 +31,18 @@
   <div class="header-actions" id="headerActions">
     <button id="newZone" class="primary">+ New handover</button>
 
+    <button id="todayDateButton" class="header-date-card" type="button" aria-label="Open calendar">
+      <svg class="header-date-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4" y="5" width="16" height="15" rx="2"></rect>
+        <path d="M8 3v4M16 3v4M4 9h16"></path>
+      </svg>
+      <span class="header-date-text">
+        <strong id="todayDateLabel">Today</strong>
+        <small id="todayTimeLabel"></small>
+      </span>
+      <input id="todayDatePicker" class="header-date-picker" type="date" aria-hidden="true" tabindex="-1">
+    </button>
+
     <div class="header-icon-group">
       <button id="notificationsButton" class="header-icon-button" type="button" aria-label="Notifications" title="Notifications" style="display:none;">
         <span class="header-icon-wrap">
@@ -113,6 +125,19 @@
         placeholder="Search zones, contractor..."
         aria-label="Search register"
       >
+
+      <div class="register-filter-wrap">
+        <button id="registerFilterButton" class="filter-button" type="button" aria-haspopup="true" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>
+          <span>Filters</span>
+          <span class="filter-chevron">⌄</span>
+        </button>
+        <div id="registerFilterMenu" class="register-filter-menu" hidden>
+          <button type="button" data-register-filter="All">All Work Permits</button>
+          <button type="button" data-register-filter="Not Closed">Open &amp; On Hold</button>
+          <button type="button" data-register-filter="Open Over 1 Week">Open Longer Than 1 Week</button>
+        </div>
+      </div>
 
     </div>
 

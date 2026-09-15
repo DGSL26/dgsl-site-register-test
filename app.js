@@ -20,6 +20,7 @@ let supabaseClient = null;
 let records = [];
 let editing = null;
 let filter = 'All';
+let advancedFilter = 'All';
 
 const SITE_VERSION = '1.2.8';
 const NOTIFICATIONS_TABLE = 'site_notifications_test';
@@ -132,111 +133,116 @@ function openSettingsDialog() {
     dialog = document.createElement('dialog');
     dialog.id = 'dgslSettingsDialog';
     dialog.className = 'header-settings-dialog';
+    dialog.innerHTML = `
+      <div class="header-dialog-inner">
+        <div class="header-dialog-head">
+          <div>
+            <p class="eyebrow">DGSL SITE REGISTER</p>
+            <h2>Settings</h2>
+          </div>
+          <button type="button" class="icon" id="closeSettings" aria-label="Close">×</button>
+        </div>
+        <div class="settings-options" id="settingsMainView">
+          <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
+          <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
+          <button type="button" id="settingsDataManagement" class="settings-option" style="position:relative;">
+            <span>Data Management</span>
+            <span id="dataManagementBadge" class="notification-badge bug-reports-badge settings-inline-badge" aria-label="unread bug reports" style="display:none;"></span>
+          </button>
+          <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
+        </div>
+        <div class="settings-options settings-subview" id="settingsDataManagementView" hidden>
+          <button type="button" id="settingsBugReports" class="settings-option" style="position:relative;">
+            <span>Bug Reports</span>
+            <span id="bugReportsBadge" class="notification-badge bug-reports-badge settings-inline-badge" aria-label="unread bug reports" style="display:none;"></span>
+          </button>
+          <button type="button" id="settingsExport" class="settings-option">Export Data</button>
+          <label class="settings-option settings-import-option" for="settingsImport">
+            <span>Import Data</span>
+            <input id="settingsImport" type="file" accept="application/json" hidden>
+          </label>
+        </div>
+      </div>
+    `;
     document.body.appendChild(dialog);
 
-    dialog._renderSettingsView = (view = 'main') => {
-      const isDataManagement = view === 'data';
-      dialog.innerHTML = `
-        <div class="header-dialog-inner">
-          <div class="header-dialog-head">
-            <div>
-              <p class="eyebrow">DGSL SITE REGISTER</p>
-              <h2>${isDataManagement ? 'Data Management' : 'Settings'}</h2>
-            </div>
-            <button type="button" class="icon" id="closeSettings" aria-label="Close">×</button>
-          </div>
-          <div class="settings-options">
-            ${isDataManagement ? `
-              <button type="button" id="settingsExport" class="settings-option">Export Data</button>
-              <label class="settings-option settings-import-option" for="settingsImport">
-                <span>Import Data</span>
-                <input id="settingsImport" type="file" accept="application/json" hidden>
-              </label>
-            ` : `
-              <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
-              <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
-              <button type="button" id="settingsBugReports" class="settings-option" style="display:none; position:relative;">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
-              <button type="button" id="settingsDataManagement" class="settings-option">Data Management</button>
-              <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
-            `}
-          </div>
-        </div>
-      `;
-
-      dialog.querySelector('#closeSettings').onclick = () => dialog.close();
-
-      if (isDataManagement) {
-        dialog.querySelector('#settingsExport').onclick = () => {
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }));
-          link.download = `DGSL-site-register-${today()}.json`;
-          link.click();
-          setTimeout(() => URL.revokeObjectURL(link.href), 0);
-        };
-
-        dialog.querySelector('#settingsImport').onchange = async e => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = async () => {
-            try {
-              const imported = JSON.parse(reader.result);
-              if (!Array.isArray(imported)) throw new Error('Invalid backup');
-              for (const record of imported) {
-                const databaseRecord = toDatabase(record);
-                const { error } = await supabaseClient.from('handovers_test').upsert(databaseRecord);
-                if (error) throw error;
-              }
-              await loadRecords();
-              alert('Backup imported.');
-            } catch (error) {
-              console.error(error);
-              alert('That file is not a valid DGSL backup.');
-            } finally {
-              e.target.value = '';
-            }
-          };
-          reader.readAsText(file);
-        };
-        return;
-      }
-
-      dialog.querySelector('#settingsChangeLog').onclick = () => {
-        dialog.close();
-        openChangeLogDialog();
-      };
-      dialog.querySelector('#settingsBugReport').onclick = () => {
-        dialog.close();
-        openBugReportDialog();
-      };
-      dialog.querySelector('#settingsBugReports').onclick = () => {
-        dialog.close();
-        openBugReportsDialog();
-      };
-      dialog.querySelector('#settingsDataManagement').onclick = () => {
-        dialog._renderSettingsView('data');
-      };
-      dialog.querySelector('#settingsLogout').onclick = () => {
-        dialog.close();
-        showLogoutConfirmDialog();
-      };
-      showBugReportsButtonForAdmin();
+    const mainView = dialog.querySelector('#settingsMainView');
+    const dataView = dialog.querySelector('#settingsDataManagementView');
+    const showMainView = () => {
+      mainView.hidden = false;
+      dataView.hidden = true;
     };
 
-    dialog.addEventListener('close', () => {
-      // Closing Data Management resets Settings to its main page.
-      dialog._renderSettingsView('main');
-    });
+    dialog.querySelector('#closeSettings').onclick = () => {
+      showMainView();
+      dialog.close();
+    };
+    dialog.querySelector('#settingsChangeLog').onclick = () => {
+      dialog.close();
+      openChangeLogDialog();
+    };
+    dialog.querySelector('#settingsBugReport').onclick = () => {
+      dialog.close();
+      openBugReportDialog();
+    };
+    dialog.querySelector('#settingsDataManagement').onclick = () => {
+      mainView.hidden = true;
+      dataView.hidden = false;
+      refreshBugReportsBadge();
+    };
+    dialog.querySelector('#settingsBugReports').onclick = () => {
+      dialog.close();
+      showMainView();
+      openBugReportsDialog();
+    };
+    dialog.querySelector('#settingsExport').onclick = () => {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }));
+      link.download = `DGSL-site-register-${today()}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 0);
+    };
+    dialog.querySelector('#settingsImport').onchange = async e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          if (!Array.isArray(imported)) throw new Error('Invalid backup');
+          for (const record of imported) {
+            const databaseRecord = toDatabase(record);
+            const { error } = await supabaseClient.from('handovers_test').upsert(databaseRecord);
+            if (error) throw error;
+          }
+          await loadRecords();
+          alert('Backup imported.');
+        } catch (error) {
+          console.error(error);
+          alert('That file is not a valid DGSL backup.');
+        } finally {
+          e.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    };
+    dialog.querySelector('#settingsLogout').onclick = () => {
+      dialog.close();
+      showMainView();
+      showLogoutConfirmDialog();
+    };
 
-    dialog._renderSettingsView('main');
+    dialog.addEventListener('close', showMainView);
   }
-
-  // Every time Settings is opened, start on the main Settings page.
-  dialog._renderSettingsView('main');
+  const mainView = dialog.querySelector('#settingsMainView');
+  const dataView = dialog.querySelector('#settingsDataManagementView');
+  if (mainView && dataView) {
+    mainView.hidden = false;
+    dataView.hidden = true;
+  }
   if (!dialog.open) dialog.showModal();
   showBugReportsButtonForAdmin();
 }
-
 
 const BUG_REPORTS_TABLE = 'bug_reports_test';
 
@@ -252,13 +258,12 @@ function bugReportEscape(value) {
 }
 
 function updateBugReportsBadge(unreadCount) {
-  const button = document.getElementById('settingsBugReports');
-  const badge = document.getElementById('bugReportsBadge');
-  if (!button || !badge) return;
   const count = Number(unreadCount) || 0;
-  badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
-  badge.className = 'notification-badge bug-reports-badge';
-  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  document.querySelectorAll('#bugReportsBadge, #dataManagementBadge').forEach(badge => {
+    badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
+    badge.className = 'notification-badge bug-reports-badge settings-inline-badge';
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  });
 }
 
 async function refreshBugReportsBadge() {
@@ -1370,17 +1375,65 @@ function esc(x = '') {
 
 function updateSummaryCardSelection() {
   document.querySelectorAll('[data-filter-card]').forEach(card => {
-    const selected = (card.dataset.filterCard || 'All') === filter;
+    const selected = advancedFilter === 'All' && (card.dataset.filterCard || 'All') === filter;
     card.classList.toggle('summary-card-selected', selected);
     card.setAttribute('aria-pressed', selected ? 'true' : 'false');
   });
 
-  const label = filter === 'All'
-    ? 'Showing: All Work Permits'
-    : `Showing: ${filter.replace('Work Permit on Hold', 'Work Permits On Hold').replace('Work Permit Open', 'Open Work Permits').replace('Work Permit Closed', 'Closed Work Permits')}`;
+  let label = 'Showing: All Work Permits';
+  if (advancedFilter === 'Not Closed') {
+    label = 'Showing: Open & On Hold Work Permits';
+  } else if (advancedFilter === 'Open Over 1 Week') {
+    label = 'Showing: Open Work Permits Over 1 Week';
+  } else if (filter !== 'All') {
+    label = `Showing: ${filter.replace('Work Permit on Hold', 'Work Permits On Hold').replace('Work Permit Open', 'Open Work Permits').replace('Work Permit Closed', 'Closed Work Permits')}`;
+  }
 
   const indicator = document.getElementById('activeFilterLabel');
   if (indicator) indicator.textContent = label;
+}
+
+function isOlderThanOneWeek(value) {
+  if (!value) return false;
+  const text = String(value).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  const handover = new Date(`${text}T00:00:00`);
+  if (Number.isNaN(handover.getTime())) return false;
+  const cutoff = new Date();
+  cutoff.setHours(0, 0, 0, 0);
+  cutoff.setDate(cutoff.getDate() - 7);
+  return handover < cutoff;
+}
+
+function applyRegisterFilterOption(option) {
+  advancedFilter = option;
+  if (option !== 'All') filter = 'All';
+  render();
+  const menu = document.getElementById('registerFilterMenu');
+  if (menu) menu.hidden = true;
+  const button = document.getElementById('registerFilterButton');
+  if (button) button.setAttribute('aria-expanded', 'false');
+}
+
+function setupRegisterFilters() {
+  const button = document.getElementById('registerFilterButton');
+  const menu = document.getElementById('registerFilterMenu');
+  if (!button || !menu || button.dataset.bound === '1') return;
+  button.dataset.bound = '1';
+  button.onclick = event => {
+    event.stopPropagation();
+    menu.hidden = !menu.hidden;
+    button.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
+  };
+  menu.querySelectorAll('[data-register-filter]').forEach(option => {
+    option.onclick = () => applyRegisterFilterOption(option.dataset.registerFilter || 'All');
+  });
+  document.addEventListener('click', event => {
+    if (!menu.hidden && !menu.contains(event.target) && event.target !== button) {
+      menu.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+    }
+  });
 }
 
 function render() {
@@ -1396,21 +1449,18 @@ function render() {
 
   const filtered =
     records
-      .filter(x =>
-
-        (
-          filter === 'All' ||
-          x.status === filter
-        )
-
-        &&
-
-        Object.values(x)
+      .filter(x => {
+        const matchesCard = filter === 'All' || x.status === filter;
+        const matchesAdvanced =
+          advancedFilter === 'All' ||
+          (advancedFilter === 'Not Closed' && (x.status === 'Work Permit Open' || x.status === 'Work Permit on Hold')) ||
+          (advancedFilter === 'Open Over 1 Week' && x.status === 'Work Permit Open' && isOlderThanOneWeek(x.handoverDate));
+        const matchesSearch = Object.values(x)
           .join(' ')
           .toLowerCase()
-          .includes(q)
-
-      )
+          .includes(q);
+        return matchesCard && matchesAdvanced && matchesSearch;
+      })
       .sort((a, b) => {
         const aDate = String(a.handoverDate || '');
         const bDate = String(b.handoverDate || '');
@@ -3735,6 +3785,7 @@ document
 
       const applyCardFilter = () => {
         filter = card.dataset.filterCard || 'All';
+        advancedFilter = 'All';
         render();
       };
 
@@ -3749,6 +3800,13 @@ document
 
     }
   );
+
+
+// ============================================================
+// REGISTER FILTER MENU
+// ============================================================
+
+setupRegisterFilters();
 
 
 // ============================================================
@@ -4105,6 +4163,61 @@ $('#clearDgslSignature')
       clearSignature(
         $('#dgslSignature')
       );
+
+
+// ============================================================
+// HEADER DATE / CALENDAR
+// ============================================================
+
+function formatHeaderDate(date) {
+  return date.toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+}
+
+function formatHeaderTime(date) {
+  return date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function setupHeaderDate() {
+  const button = document.getElementById('todayDateButton');
+  const picker = document.getElementById('todayDatePicker');
+  const dateLabel = document.getElementById('todayDateLabel');
+  const timeLabel = document.getElementById('todayTimeLabel');
+  if (!button || !picker || !dateLabel || !timeLabel || button.dataset.bound === '1') return;
+
+  const now = new Date();
+  const iso = today();
+  picker.value = iso;
+  dateLabel.textContent = formatHeaderDate(now);
+  timeLabel.textContent = formatHeaderTime(now);
+  button.dataset.bound = '1';
+
+  button.onclick = () => {
+    try {
+      if (typeof picker.showPicker === 'function') picker.showPicker();
+      else picker.click();
+    } catch (_) {
+      picker.click();
+    }
+  };
+
+  picker.onchange = () => {
+    const selected = new Date(`${picker.value}T00:00:00`);
+    if (!Number.isNaN(selected.getTime())) {
+      dateLabel.textContent = formatHeaderDate(selected);
+      timeLabel.textContent = picker.value === iso ? formatHeaderTime(new Date()) : '';
+    }
+  };
+}
+
+setupHeaderDate();
+document.addEventListener('DOMContentLoaded', setupHeaderDate);
 
 
 // ============================================================

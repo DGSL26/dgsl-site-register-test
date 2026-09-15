@@ -1604,9 +1604,6 @@ body.change-log-open {
 .settings-section { display:grid; gap:10px; margin-top:4px; padding-top:15px; border-top:1px solid #e0e5e9; }
 .settings-section-title { font-size:12px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:#607080; margin-bottom:1px; }
 .settings-import-option { display:block; cursor:pointer; box-sizing:border-box; }
-.settings-import-option { border:1px solid #c9d6e2 !important; border-radius:6px !important; cursor:pointer; box-sizing:border-box; }
-.settings-import-option:hover { background:#f8fbfd !important; }
-.settings-import-option span { display:block; width:100%; }
 .settings-logout { color:#b42318; }
 .notifications-empty { padding:22px 4px 5px; color:#68737d; }
 .version-bar { cursor:default !important; }
@@ -1791,3 +1788,105 @@ body.change-log-open {
 .changelog-list { display: grid; gap: 14px; }
 .changelog-entry { margin: 0 !important; }
 .changelog-version { display: flex; align-items: center; gap: 8px; }
+
+/* ============================================================
+   HEADER DATE BAR + REGISTER FILTER MENU
+   ============================================================ */
+.header-date-card {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-width: 124px !important;
+  height: 48px !important;
+  padding: 6px 12px !important;
+  border: 1px solid #e3e9ef !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: #243447 !important;
+  box-shadow: 0 2px 8px rgba(31,78,120,.05) !important;
+  text-align: left !important;
+}
+.header-date-card:hover { background: #f8fafc !important; }
+.header-date-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: #2f5f8f;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: 0 0 auto;
+}
+.header-date-text { display:flex; flex-direction:column; min-width:0; line-height:1.1; }
+.header-date-text strong { font-size:12px; font-weight:700; white-space:nowrap; }
+.header-date-text small { margin-top:2px; font-size:10px; color:#7a8793; white-space:nowrap; }
+.header-date-picker {
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  border:0 !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+.register-filter-wrap { position:relative; display:inline-flex; }
+.filter-button {
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  white-space:nowrap !important;
+}
+.filter-button svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.filter-chevron { font-size:16px; line-height:1; margin-left:1px; }
+.register-filter-menu {
+  position:absolute;
+  top:calc(100% + 7px);
+  right:0;
+  z-index:50;
+  width:245px;
+  padding:6px;
+  background:#fff;
+  border:1px solid #d8e0e7;
+  border-radius:9px;
+  box-shadow:0 12px 28px rgba(24,45,64,.14);
+}
+.register-filter-menu button {
+  width:100%;
+  border:0 !important;
+  border-radius:6px !important;
+  background:#fff !important;
+  padding:10px 11px !important;
+  text-align:left !important;
+  color:#243447 !important;
+  font-size:14px !important;
+}
+.register-filter-menu button:hover { background:#f1f5f8 !important; }
+.settings-subview[hidden] { display:none !important; }
+.settings-inline-badge {
+  position:static !important;
+  display:inline-flex;
+  align-items:center !important;
+  justify-content:center !important;
+  vertical-align:middle !important;
+  min-width:17px !important;
+  height:17px !important;
+  padding:0 4px !important;
+  margin-left:8px !important;
+  border-radius:999px !important;
+  background:#2f80ed !important;
+  color:#fff !important;
+  font-size:10px !important;
+  font-weight:700 !important;
+  line-height:17px !important;
+  text-align:center !important;
+  border:1px solid #fff !important;
+  font-variant-numeric:tabular-nums !important;
+}
+#dataManagementBadge[style*="display: none"],
+#bugReportsBadge[style*="display: none"] { display:none !important; }
+
+@media (max-width:800px) {
+  .header-date-card { min-width:112px !important; height:44px !important; }
+  .register-filter-menu { right:0; width:min(245px, calc(100vw - 40px)); }
+}
