@@ -1219,9 +1219,36 @@ async function loadRecords() {
 // REAL-TIME UPDATES
 // ============================================================
 
-function setupRealtime() {
+let handoversRealtimeChannel = null;
 
-  supabaseClient
+async function setupRealtime() {
+
+  // A desktop browser can keep an existing Supabase channel alive when a
+  // page is refreshed/restored from cache. Remove that channel first so we
+  // never try to add postgres_changes handlers to an already-subscribed
+  // channel.
+  if (handoversRealtimeChannel) {
+    try {
+      await supabaseClient.removeChannel(handoversRealtimeChannel);
+    } catch (error) {
+      console.warn('Could not remove previous realtime channel:', error);
+    }
+    handoversRealtimeChannel = null;
+  }
+
+  const existing = supabaseClient
+    .getChannels()
+    .find(channel => channel.topic === 'realtime:handovers-test-live');
+
+  if (existing) {
+    try {
+      await supabaseClient.removeChannel(existing);
+    } catch (error) {
+      console.warn('Could not remove existing realtime channel:', error);
+    }
+  }
+
+  handoversRealtimeChannel = supabaseClient
     .channel('handovers-test-live')
     .on(
       'postgres_changes',
@@ -1231,13 +1258,17 @@ function setupRealtime() {
         table: 'handovers_test'
       },
       async () => {
-
         await loadRecords();
-
       }
-    )
-    .subscribe();
+    );
 
+  handoversRealtimeChannel.subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log('Supabase realtime connected: handovers_test');
+    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      console.warn('Supabase realtime status:', status);
+    }
+  });
 }
 
 
@@ -4233,7 +4264,13 @@ async function startApp() {
 
     await loadRecords();
 
-    setupRealtime();
+    try {
+      await setupRealtime();
+    } catch (realtimeError) {
+      // Realtime is an enhancement; a realtime failure must not stop the
+      // register itself from loading from Supabase REST.
+      console.warn('Realtime setup failed:', realtimeError);
+    }
     await refreshNotificationState();
 
   } catch (error) {
