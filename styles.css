@@ -1839,3 +1839,41 @@ body.change-log-open {
 }
 #settingsDataManagement .bug-reports-badge[style*="display: none"] { display:none !important; }
 #settingsDataManagement .bug-reports-badge[style*="display: inline-flex"] { display:inline-flex !important; }
+
+
+/* Clear Filter is a full-width action at the bottom of the filter menu. */
+.permit-filter-clear-button {
+  width: 100% !important;
+  display: block !important;
+  margin-top: 8px !important;
+  padding: 10px 12px !important;
+  border: 0 !important;
+  border-top: 1px solid #edf1f4 !important;
+  border-radius: 0 0 7px 7px !important;
+  background: #fff !important;
+  color: #1f4e78 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+}
+
+.permit-filter-clear-button:hover {
+  background: #f5f9ff !important;
+}
+
+/* Data Management keeps its unread badge beside the button text. */
+#settingsDataManagement {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+#dataManagementBadge,
+#dataManagementBugReportsBadge {
+  position: static !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}

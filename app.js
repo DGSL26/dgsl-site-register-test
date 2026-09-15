@@ -144,15 +144,7 @@ function openSettingsDialog() {
         <div class="settings-options">
           <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
           <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
-          <button type="button" id="settingsBugReports" class="settings-option" style="display:none; position:relative;">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
-          <div class="settings-section">
-            <div class="settings-section-title">Data Management</div>
-            <button type="button" id="settingsExport" class="settings-option">Export Data</button>
-            <label class="settings-option settings-import-option" for="settingsImport">
-              <span>Import Data</span>
-              <input id="settingsImport" type="file" accept="application/json" hidden>
-            </label>
-          </div>
+          <button type="button" id="settingsDataManagement" class="settings-option" style="position:relative;">Data Management <span id="dataManagementBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
           <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
         </div>
       </div>
@@ -168,18 +160,67 @@ function openSettingsDialog() {
       dialog.close();
       openBugReportDialog();
     };
-    dialog.querySelector('#settingsBugReports').onclick = () => {
+    dialog.querySelector('#settingsDataManagement').onclick = () => {
+      dialog.close();
+      openDataManagementDialog();
+    };
+    dialog.querySelector('#settingsLogout').onclick = () => {
+      dialog.close();
+      showLogoutConfirmDialog();
+    };
+  }
+  if (!dialog.open) dialog.showModal();
+  showBugReportsButtonForAdmin();
+}
+
+
+function openDataManagementDialog() {
+  let dialog = document.getElementById('dgslDataManagementDialog');
+
+  if (!dialog) {
+    dialog = document.createElement('dialog');
+    dialog.id = 'dgslDataManagementDialog';
+    dialog.className = 'header-settings-dialog';
+    dialog.innerHTML = `
+      <div class="header-dialog-inner">
+        <div class="header-dialog-head">
+          <div>
+            <p class="eyebrow">DGSL SITE REGISTER</p>
+            <h2>Data Management</h2>
+          </div>
+          <button type="button" class="icon" id="closeDataManagement" aria-label="Close">×</button>
+        </div>
+        <div class="settings-options">
+          <button type="button" id="dataManagementBugReports" class="settings-option" style="position:relative;">
+            Bug Reports
+            <span id="dataManagementBugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span>
+          </button>
+          <button type="button" id="dataManagementExport" class="settings-option">Export Data</button>
+          <label class="settings-option settings-import-option" for="dataManagementImport">
+            <span>Import Data</span>
+            <input id="dataManagementImport" type="file" accept="application/json" hidden>
+          </label>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+
+    dialog.querySelector('#closeDataManagement').onclick = () => dialog.close();
+
+    dialog.querySelector('#dataManagementBugReports').onclick = () => {
       dialog.close();
       openBugReportsDialog();
     };
-    dialog.querySelector('#settingsExport').onclick = () => {
+
+    dialog.querySelector('#dataManagementExport').onclick = () => {
       const link = document.createElement('a');
       link.href = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }));
       link.download = `DGSL-site-register-${today()}.json`;
       link.click();
       setTimeout(() => URL.revokeObjectURL(link.href), 0);
     };
-    dialog.querySelector('#settingsImport').onchange = async e => {
+
+    dialog.querySelector('#dataManagementImport').onchange = async e => {
       const file = e.target.files?.[0];
       if (!file) return;
       const reader = new FileReader();
@@ -203,15 +244,11 @@ function openSettingsDialog() {
       };
       reader.readAsText(file);
     };
-    dialog.querySelector('#settingsLogout').onclick = () => {
-      dialog.close();
-      showLogoutConfirmDialog();
-    };
   }
-  if (!dialog.open) dialog.showModal();
-  showBugReportsButtonForAdmin();
-}
 
+  if (!dialog.open) dialog.showModal();
+  refreshBugReportsBadge();
+}
 
 const BUG_REPORTS_TABLE = 'bug_reports_test';
 
@@ -227,13 +264,18 @@ function bugReportEscape(value) {
 }
 
 function updateBugReportsBadge(unreadCount) {
-  const button = document.getElementById('settingsBugReports');
-  const badge = document.getElementById('bugReportsBadge');
-  if (!button || !badge) return;
   const count = Number(unreadCount) || 0;
-  badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
-  badge.className = 'notification-badge bug-reports-badge';
-  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  const badges = [
+    document.getElementById('dataManagementBadge'),
+    document.getElementById('dataManagementBugReportsBadge')
+  ];
+
+  badges.forEach(badge => {
+    if (!badge) return;
+    badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
+    badge.className = 'notification-badge bug-reports-badge';
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  });
 }
 
 async function refreshBugReportsBadge() {
@@ -255,7 +297,7 @@ async function refreshBugReportsBadge() {
 }
 
 function showBugReportsButtonForAdmin() {
-  const button = document.getElementById('settingsBugReports');
+  const button = document.getElementById('settingsDataManagement');
   if (button) button.style.display = isBugReportAdmin() ? '' : 'none';
   if (isBugReportAdmin()) refreshBugReportsBadge();
   else updateBugReportsBadge(0);
@@ -3813,18 +3855,19 @@ function setupRegisterFilter() {
   const menu = document.getElementById('permitFilterMenu');
   if (!button || !menu) return;
 
-  // Ensure the clear option is always present, even if an older cached/index
-  // version of the filter menu is being used.
-  if (!menu.querySelector('[data-permit-clear]')) {
-    const clearOption = document.createElement('button');
-    clearOption.type = 'button';
-    clearOption.className = 'permit-filter-option permit-filter-clear';
-    clearOption.dataset.permitClear = 'true';
-    clearOption.innerHTML = '<span class="permit-filter-check permit-filter-clear-mark" aria-hidden="true"></span><span><strong>Clear filter</strong><small>Show all work permits</small></span>';
-    menu.appendChild(clearOption);
-  }
+  // The clear control is a single full-width button across the bottom,
+  // not another filter/checkbox option.
+  menu.querySelectorAll('[data-permit-clear]').forEach(option => option.remove());
 
-  const clearOption = menu.querySelector('[data-permit-clear]');
+  let clearButton = menu.querySelector('.permit-filter-clear-button');
+  if (!clearButton) {
+    clearButton = document.createElement('button');
+    clearButton.type = 'button';
+    clearButton.className = 'permit-filter-clear-button';
+    clearButton.textContent = 'Clear Filter';
+    clearButton.setAttribute('aria-label', 'Clear filter');
+    menu.appendChild(clearButton);
+  }
 
   const updateMenuState = () => {
     menu.querySelectorAll('[data-permit-filter]').forEach(option => {
@@ -3858,7 +3901,7 @@ function setupRegisterFilter() {
     };
   });
 
-  clearOption.onclick = event => {
+  clearButton.onclick = event => {
     event.stopPropagation();
     filter = 'All';
     closeMenu();
