@@ -1604,6 +1604,10 @@ body.change-log-open {
 .settings-section { display:grid; gap:10px; margin-top:4px; padding-top:15px; border-top:1px solid #e0e5e9; }
 .settings-section-title { font-size:12px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:#607080; margin-bottom:1px; }
 .settings-import-option { display:block; cursor:pointer; box-sizing:border-box; }
+.settings-import-option { border:1px solid #c9d6e2 !important; border-radius:6px !important; color:#17212b !important; }
+.settings-management-button { box-sizing:border-box; }
+.settings-management-view[hidden] { display:none !important; }
+#rowMoreDelete { color:#17212b !important; }
 .settings-logout { color:#b42318; }
 .notifications-empty { padding:22px 4px 5px; color:#68737d; }
 .version-bar { cursor:default !important; }
@@ -1788,47 +1792,3 @@ body.change-log-open {
 .changelog-list { display: grid; gap: 14px; }
 .changelog-entry { margin: 0 !important; }
 .changelog-version { display: flex; align-items: center; gap: 8px; }
-
-/* ============================================================
-   DATA MANAGEMENT + BUG REPORT BADGES
-   ============================================================ */
-.data-management-badge,
-.bug-reports-badge {
-  position: static !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  vertical-align: middle !important;
-  box-sizing: border-box !important;
-  min-width: 17px !important;
-  height: 17px !important;
-  padding: 0 4px !important;
-  margin: 0 0 0 8px !important;
-  border-radius: 999px !important;
-  background: #2f80ed !important;
-  color: #fff !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  line-height: 17px !important;
-  text-align: center !important;
-  border: 1px solid #fff !important;
-  font-variant-numeric: tabular-nums !important;
-}
-.data-management-badge[hidden],
-.bug-reports-badge[hidden] {
-  display: none !important;
-}
-.settings-import-option {
-  display: block !important;
-  width: 100% !important;
-  text-align: left !important;
-  padding: 12px 14px !important;
-  background: #fff !important;
-  border: 1px solid #cbd5df !important;
-  border-radius: 6px !important;
-  box-sizing: border-box !important;
-  cursor: pointer !important;
-}
-.settings-import-option:hover {
-  background: #f7fafc !important;
-}

@@ -137,24 +137,18 @@ function openSettingsDialog() {
         <div class="header-dialog-head">
           <div>
             <p class="eyebrow">DGSL SITE REGISTER</p>
-            <h2 id="settingsDialogTitle">Settings</h2>
+            <h2>Settings</h2>
           </div>
           <button type="button" class="icon" id="closeSettings" aria-label="Close">×</button>
         </div>
-        <div id="settingsMainView" class="settings-options">
+        <div class="settings-options" id="settingsMainView">
           <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
           <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
-          <button type="button" id="settingsDataManagement" class="settings-option" style="position:relative;">
-            Data Management
-            <span id="dataManagementBadge" class="notification-badge data-management-badge" aria-label="unread bug reports" hidden></span>
-          </button>
+          <button type="button" id="settingsManagement" class="settings-option settings-management-button" style="position:relative;">Data Management <span id="settingsManagementBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
           <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
         </div>
-        <div id="settingsDataView" class="settings-options settings-data-view" hidden>
-          <button type="button" id="settingsBugReports" class="settings-option" style="position:relative;">
-            Bug Reports
-            <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" hidden></span>
-          </button>
+        <div class="settings-options settings-management-view" id="settingsManagementView" hidden>
+          <button type="button" id="settingsBugReports" class="settings-option" style="position:relative;">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
           <button type="button" id="settingsExport" class="settings-option">Export Data</button>
           <label class="settings-option settings-import-option" for="settingsImport">
             <span>Import Data</span>
@@ -165,40 +159,26 @@ function openSettingsDialog() {
     `;
     document.body.appendChild(dialog);
 
-    const mainView = dialog.querySelector('#settingsMainView');
-    const dataView = dialog.querySelector('#settingsDataView');
-    const title = dialog.querySelector('#settingsDialogTitle');
-
-    const showMainSettings = () => {
-      mainView.hidden = false;
-      dataView.hidden = true;
-      title.textContent = 'Settings';
-    };
-
-    const showDataManagement = () => {
-      mainView.hidden = true;
-      dataView.hidden = false;
-      title.textContent = 'Data Management';
-    };
-
     dialog.querySelector('#closeSettings').onclick = () => {
-      showMainSettings();
+      dialog.querySelector('#settingsMainView').hidden = false;
+      dialog.querySelector('#settingsManagementView').hidden = true;
       dialog.close();
+    };
+    dialog.querySelector('#settingsManagement').onclick = () => {
+      dialog.querySelector('#settingsMainView').hidden = true;
+      dialog.querySelector('#settingsManagementView').hidden = false;
+      refreshBugReportsBadge();
     };
     dialog.querySelector('#settingsChangeLog').onclick = () => {
       dialog.close();
-      showMainSettings();
       openChangeLogDialog();
     };
     dialog.querySelector('#settingsBugReport').onclick = () => {
       dialog.close();
-      showMainSettings();
       openBugReportDialog();
     };
-    dialog.querySelector('#settingsDataManagement').onclick = showDataManagement;
     dialog.querySelector('#settingsBugReports').onclick = () => {
       dialog.close();
-      showMainSettings();
       openBugReportsDialog();
     };
     dialog.querySelector('#settingsExport').onclick = () => {
@@ -234,22 +214,15 @@ function openSettingsDialog() {
     };
     dialog.querySelector('#settingsLogout').onclick = () => {
       dialog.close();
-      showMainSettings();
       showLogoutConfirmDialog();
     };
-
-    dialog.addEventListener('close', showMainSettings);
   }
-
-  // Every time Settings is opened, always start on the main Settings view.
   dialog.querySelector('#settingsMainView').hidden = false;
-  dialog.querySelector('#settingsDataView').hidden = true;
-  dialog.querySelector('#settingsDialogTitle').textContent = 'Settings';
-
+  dialog.querySelector('#settingsManagementView').hidden = true;
   if (!dialog.open) dialog.showModal();
   showBugReportsButtonForAdmin();
-  refreshBugReportsBadge();
 }
+
 
 const BUG_REPORTS_TABLE = 'bug_reports_test';
 
@@ -265,20 +238,16 @@ function bugReportEscape(value) {
 }
 
 function updateBugReportsBadge(unreadCount) {
-  const button = document.getElementById('settingsBugReports');
-  const badge = document.getElementById('bugReportsBadge');
-  const managementBadge = document.getElementById('dataManagementBadge');
-  const count = Math.max(0, Number(unreadCount) || 0);
-
-  if (button && badge) {
+  const count = Number(unreadCount) || 0;
+  const badges = [
+    document.getElementById('bugReportsBadge'),
+    document.getElementById('settingsManagementBadge')
+  ].filter(Boolean);
+  badges.forEach(badge => {
     badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
-    badge.hidden = count === 0;
-  }
-
-  if (managementBadge) {
-    managementBadge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
-    managementBadge.hidden = count === 0;
-  }
+    badge.className = 'notification-badge bug-reports-badge';
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  });
 }
 
 async function refreshBugReportsBadge() {
@@ -1956,7 +1925,7 @@ function showRowMoreDialog(record) {
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         ${currentUser ? '<button type="button" id="rowMoreCopy">Copy</button>' : '<button type="button" id="rowMoreDownload">Download PDF</button>'}
         <button type="button" id="rowMoreShare">Share</button>
-        ${currentUser ? '<button type="button" id="rowMoreDelete" class="danger">Delete Handover</button>' : ''}
+        ${currentUser ? '<button type="button" id="rowMoreDelete">Delete</button>' : ''}
       </div>
       <div style="margin-top:18px;">
         <button type="button" id="rowMoreCancel">Cancel</button>
@@ -1988,22 +1957,32 @@ function showRowMoreDialog(record) {
     };
   }
 
-  const moreDeleteButton = dialog.querySelector('#rowMoreDelete');
-  if (moreDeleteButton) {
-    moreDeleteButton.onclick = async () => {
-      dialog.close();
-      open(record, false);
-      const deleteButton = document.getElementById('delete');
-      if (deleteButton) {
-        await deleteButton.onclick();
-      }
-    };
-  }
-
   dialog.querySelector('#rowMoreShare').onclick = () => {
     dialog.close();
     setTimeout(() => sharePdfToDevice(record), 0);
   };
+
+  const moreDeleteButton = dialog.querySelector('#rowMoreDelete');
+  if (moreDeleteButton) {
+    moreDeleteButton.onclick = async () => {
+      if (!confirm('Delete this handover record?')) return;
+      dialog.close();
+      try {
+        if (Array.isArray(record.photos)) {
+          for (const url of record.photos) {
+            await deletePhoto(url);
+          }
+        }
+        const { error } = await supabaseClient.from('handovers_test').delete().eq('id', record.id);
+        if (error) throw error;
+        if (editing?.id === record.id) editing = null;
+        await loadRecords();
+      } catch (error) {
+        console.error('Delete handover error:', error);
+        alert('Unable to delete the handover.');
+      }
+    };
+  }
 
   if (!dialog.open) dialog.showModal();
 }
