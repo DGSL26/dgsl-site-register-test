@@ -20,7 +20,7 @@ let supabaseClient = null;
 let records = [];
 let editing = null;
 let filter = 'All';
-let advancedFilter = 'All';
+let permitFilter = 'All';
 
 const SITE_VERSION = '1.2.8';
 const NOTIFICATIONS_TABLE = 'site_notifications_test';
@@ -53,6 +53,35 @@ const today = () => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 };
+
+function updateDateBar() {
+  const dateEl = document.getElementById('dateBarDate');
+  const timeEl = document.getElementById('dateBarTime');
+  const picker = document.getElementById('datePicker');
+  if (!dateEl || !timeEl) return;
+
+  const now = new Date();
+  const selected = picker?.value ? new Date(`${picker.value}T00:00:00`) : now;
+  dateEl.textContent = selected.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  timeEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (picker && !picker.value) picker.value = today();
+}
+
+function setupDateBar() {
+  const bar = document.getElementById('dateBar');
+  const picker = document.getElementById('datePicker');
+  if (!bar || !picker) return;
+
+  if (!picker.value) picker.value = today();
+  updateDateBar();
+
+  bar.onclick = () => {
+    if (typeof picker.showPicker === 'function') picker.showPicker();
+    else picker.click();
+  };
+  picker.onchange = updateDateBar;
+  setInterval(updateDateBar, 30000);
+}
 
 // ============================================================
 // AUTHENTICATION UI
@@ -142,41 +171,25 @@ function openSettingsDialog() {
           </div>
           <button type="button" class="icon" id="closeSettings" aria-label="Close">×</button>
         </div>
-        <div class="settings-options" id="settingsMainView">
+        <div class="settings-options">
           <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
           <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
-          <button type="button" id="settingsDataManagement" class="settings-option" style="position:relative;">
-            <span>Data Management</span>
-            <span id="dataManagementBadge" class="notification-badge bug-reports-badge settings-inline-badge" aria-label="unread bug reports" style="display:none;"></span>
-          </button>
+          <button type="button" id="settingsBugReports" class="settings-option" style="display:none; position:relative;">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
+          <div class="settings-section">
+            <div class="settings-section-title">Data Management</div>
+            <button type="button" id="settingsExport" class="settings-option">Export Data</button>
+            <label class="settings-option settings-import-option" for="settingsImport">
+              <span>Import Data</span>
+              <input id="settingsImport" type="file" accept="application/json" hidden>
+            </label>
+          </div>
           <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
-        </div>
-        <div class="settings-options settings-subview" id="settingsDataManagementView" hidden>
-          <button type="button" id="settingsBugReports" class="settings-option" style="position:relative;">
-            <span>Bug Reports</span>
-            <span id="bugReportsBadge" class="notification-badge bug-reports-badge settings-inline-badge" aria-label="unread bug reports" style="display:none;"></span>
-          </button>
-          <button type="button" id="settingsExport" class="settings-option">Export Data</button>
-          <label class="settings-option settings-import-option" for="settingsImport">
-            <span>Import Data</span>
-            <input id="settingsImport" type="file" accept="application/json" hidden>
-          </label>
         </div>
       </div>
     `;
     document.body.appendChild(dialog);
 
-    const mainView = dialog.querySelector('#settingsMainView');
-    const dataView = dialog.querySelector('#settingsDataManagementView');
-    const showMainView = () => {
-      mainView.hidden = false;
-      dataView.hidden = true;
-    };
-
-    dialog.querySelector('#closeSettings').onclick = () => {
-      showMainView();
-      dialog.close();
-    };
+    dialog.querySelector('#closeSettings').onclick = () => dialog.close();
     dialog.querySelector('#settingsChangeLog').onclick = () => {
       dialog.close();
       openChangeLogDialog();
@@ -185,14 +198,8 @@ function openSettingsDialog() {
       dialog.close();
       openBugReportDialog();
     };
-    dialog.querySelector('#settingsDataManagement').onclick = () => {
-      mainView.hidden = true;
-      dataView.hidden = false;
-      refreshBugReportsBadge();
-    };
     dialog.querySelector('#settingsBugReports').onclick = () => {
       dialog.close();
-      showMainView();
       openBugReportsDialog();
     };
     dialog.querySelector('#settingsExport').onclick = () => {
@@ -228,21 +235,13 @@ function openSettingsDialog() {
     };
     dialog.querySelector('#settingsLogout').onclick = () => {
       dialog.close();
-      showMainView();
       showLogoutConfirmDialog();
     };
-
-    dialog.addEventListener('close', showMainView);
-  }
-  const mainView = dialog.querySelector('#settingsMainView');
-  const dataView = dialog.querySelector('#settingsDataManagementView');
-  if (mainView && dataView) {
-    mainView.hidden = false;
-    dataView.hidden = true;
   }
   if (!dialog.open) dialog.showModal();
   showBugReportsButtonForAdmin();
 }
+
 
 const BUG_REPORTS_TABLE = 'bug_reports_test';
 
@@ -258,12 +257,13 @@ function bugReportEscape(value) {
 }
 
 function updateBugReportsBadge(unreadCount) {
+  const button = document.getElementById('settingsBugReports');
+  const badge = document.getElementById('bugReportsBadge');
+  if (!button || !badge) return;
   const count = Number(unreadCount) || 0;
-  document.querySelectorAll('#bugReportsBadge, #dataManagementBadge').forEach(badge => {
-    badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
-    badge.className = 'notification-badge bug-reports-badge settings-inline-badge';
-    badge.style.display = count > 0 ? 'inline-flex' : 'none';
-  });
+  badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
+  badge.className = 'notification-badge bug-reports-badge';
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
 async function refreshBugReportsBadge() {
@@ -1375,65 +1375,24 @@ function esc(x = '') {
 
 function updateSummaryCardSelection() {
   document.querySelectorAll('[data-filter-card]').forEach(card => {
-    const selected = advancedFilter === 'All' && (card.dataset.filterCard || 'All') === filter;
+    const selected = (card.dataset.filterCard || 'All') === filter;
     card.classList.toggle('summary-card-selected', selected);
     card.setAttribute('aria-pressed', selected ? 'true' : 'false');
   });
 
-  let label = 'Showing: All Work Permits';
-  if (advancedFilter === 'Not Closed') {
-    label = 'Showing: Open & On Hold Work Permits';
-  } else if (advancedFilter === 'Open Over 1 Week') {
-    label = 'Showing: Open Work Permits Over 1 Week';
-  } else if (filter !== 'All') {
+  let label;
+  if (permitFilter === 'Open/On Hold') {
+    label = 'Showing: Open/On Hold';
+  } else if (permitFilter === 'Open Longer Than 1 Week') {
+    label = 'Showing: Open Longer Than 1 Week';
+  } else if (filter === 'All') {
+    label = 'Showing: All Work Permits';
+  } else {
     label = `Showing: ${filter.replace('Work Permit on Hold', 'Work Permits On Hold').replace('Work Permit Open', 'Open Work Permits').replace('Work Permit Closed', 'Closed Work Permits')}`;
   }
 
   const indicator = document.getElementById('activeFilterLabel');
   if (indicator) indicator.textContent = label;
-}
-
-function isOlderThanOneWeek(value) {
-  if (!value) return false;
-  const text = String(value).slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
-  const handover = new Date(`${text}T00:00:00`);
-  if (Number.isNaN(handover.getTime())) return false;
-  const cutoff = new Date();
-  cutoff.setHours(0, 0, 0, 0);
-  cutoff.setDate(cutoff.getDate() - 7);
-  return handover < cutoff;
-}
-
-function applyRegisterFilterOption(option) {
-  advancedFilter = option;
-  if (option !== 'All') filter = 'All';
-  render();
-  const menu = document.getElementById('registerFilterMenu');
-  if (menu) menu.hidden = true;
-  const button = document.getElementById('registerFilterButton');
-  if (button) button.setAttribute('aria-expanded', 'false');
-}
-
-function setupRegisterFilters() {
-  const button = document.getElementById('registerFilterButton');
-  const menu = document.getElementById('registerFilterMenu');
-  if (!button || !menu || button.dataset.bound === '1') return;
-  button.dataset.bound = '1';
-  button.onclick = event => {
-    event.stopPropagation();
-    menu.hidden = !menu.hidden;
-    button.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
-  };
-  menu.querySelectorAll('[data-register-filter]').forEach(option => {
-    option.onclick = () => applyRegisterFilterOption(option.dataset.registerFilter || 'All');
-  });
-  document.addEventListener('click', event => {
-    if (!menu.hidden && !menu.contains(event.target) && event.target !== button) {
-      menu.hidden = true;
-      button.setAttribute('aria-expanded', 'false');
-    }
-  });
 }
 
 function render() {
@@ -1451,15 +1410,20 @@ function render() {
     records
       .filter(x => {
         const matchesCard = filter === 'All' || x.status === filter;
-        const matchesAdvanced =
-          advancedFilter === 'All' ||
-          (advancedFilter === 'Not Closed' && (x.status === 'Work Permit Open' || x.status === 'Work Permit on Hold')) ||
-          (advancedFilter === 'Open Over 1 Week' && x.status === 'Work Permit Open' && isOlderThanOneWeek(x.handoverDate));
-        const matchesSearch = Object.values(x)
+        let matchesPermitFilter = true;
+
+        if (permitFilter === 'Open/On Hold') {
+          matchesPermitFilter = x.status === 'Work Permit Open' || x.status === 'Work Permit on Hold';
+        } else if (permitFilter === 'Open Longer Than 1 Week') {
+          const handover = new Date(`${String(x.handoverDate || '')}T00:00:00`);
+          const ageDays = (Date.now() - handover.getTime()) / 86400000;
+          matchesPermitFilter = x.status === 'Work Permit Open' && Number.isFinite(ageDays) && ageDays > 7;
+        }
+
+        return matchesCard && matchesPermitFilter && Object.values(x)
           .join(' ')
           .toLowerCase()
           .includes(q);
-        return matchesCard && matchesAdvanced && matchesSearch;
       })
       .sort((a, b) => {
         const aDate = String(a.handoverDate || '');
@@ -3773,6 +3737,56 @@ async function deletePhoto(
 
 
 // ============================================================
+// WORK PERMIT FILTER MENU
+// ============================================================
+
+function updatePermitFilterUi() {
+  const button = document.getElementById('filterButton');
+  const menu = document.getElementById('filterMenu');
+  if (!button || !menu) return;
+
+  menu.querySelectorAll('[data-permit-filter]').forEach(option => {
+    const selected = option.dataset.permitFilter === permitFilter;
+    option.classList.toggle('selected', selected);
+    option.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  });
+  button.classList.toggle('active', permitFilter !== 'All');
+}
+
+function setupPermitFilterMenu() {
+  const button = document.getElementById('filterButton');
+  const menu = document.getElementById('filterMenu');
+  if (!button || !menu) return;
+
+  button.onclick = event => {
+    event.stopPropagation();
+    const open = !menu.hidden;
+    menu.hidden = open;
+    button.setAttribute('aria-expanded', open ? 'false' : 'true');
+  };
+
+  menu.querySelectorAll('[data-permit-filter]').forEach(option => {
+    option.onclick = () => {
+      permitFilter = option.dataset.permitFilter || 'All';
+      filter = 'All';
+      menu.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+      updatePermitFilterUi();
+      render();
+    };
+  });
+
+  document.addEventListener('click', event => {
+    if (!menu.hidden && !menu.contains(event.target) && event.target !== button) {
+      menu.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  updatePermitFilterUi();
+}
+
+// ============================================================
 // SUMMARY CARD FILTERS
 // ============================================================
 
@@ -3785,7 +3799,8 @@ document
 
       const applyCardFilter = () => {
         filter = card.dataset.filterCard || 'All';
-        advancedFilter = 'All';
+        permitFilter = 'All';
+        updatePermitFilterUi();
         render();
       };
 
@@ -3800,13 +3815,6 @@ document
 
     }
   );
-
-
-// ============================================================
-// REGISTER FILTER MENU
-// ============================================================
-
-setupRegisterFilters();
 
 
 // ============================================================
@@ -4166,61 +4174,6 @@ $('#clearDgslSignature')
 
 
 // ============================================================
-// HEADER DATE / CALENDAR
-// ============================================================
-
-function formatHeaderDate(date) {
-  return date.toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
-}
-
-function formatHeaderTime(date) {
-  return date.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-function setupHeaderDate() {
-  const button = document.getElementById('todayDateButton');
-  const picker = document.getElementById('todayDatePicker');
-  const dateLabel = document.getElementById('todayDateLabel');
-  const timeLabel = document.getElementById('todayTimeLabel');
-  if (!button || !picker || !dateLabel || !timeLabel || button.dataset.bound === '1') return;
-
-  const now = new Date();
-  const iso = today();
-  picker.value = iso;
-  dateLabel.textContent = formatHeaderDate(now);
-  timeLabel.textContent = formatHeaderTime(now);
-  button.dataset.bound = '1';
-
-  button.onclick = () => {
-    try {
-      if (typeof picker.showPicker === 'function') picker.showPicker();
-      else picker.click();
-    } catch (_) {
-      picker.click();
-    }
-  };
-
-  picker.onchange = () => {
-    const selected = new Date(`${picker.value}T00:00:00`);
-    if (!Number.isNaN(selected.getTime())) {
-      dateLabel.textContent = formatHeaderDate(selected);
-      timeLabel.textContent = picker.value === iso ? formatHeaderTime(new Date()) : '';
-    }
-  };
-}
-
-setupHeaderDate();
-document.addEventListener('DOMContentLoaded', setupHeaderDate);
-
-
-// ============================================================
 // START APPLICATION
 // ============================================================
 
@@ -4312,3 +4265,10 @@ $('#closePdf').onclick =
     $('#pdfViewer').innerHTML = '';
 
   };
+
+
+// Initial responsive date/filter controls.
+document.addEventListener('DOMContentLoaded', () => {
+  setupDateBar();
+  setupPermitFilterMenu();
+});
