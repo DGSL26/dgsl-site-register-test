@@ -5560,62 +5560,6 @@ function getImageDimensions(
 }
 
 
-// ============================================================
-// START APPLICATION
-// ============================================================
-
-async function startApp() {
-
-  try {
-
-    addLogoToForm();
-
-    await loadSupabase();
-
-    const { data: sessionData } =
-      await supabaseClient.auth.getSession();
-
-    currentUser =
-      sessionData?.session?.user || null;
-
-    ensureAuthUi();
-    updateAuthUi();
-
-    supabaseClient.auth.onAuthStateChange(
-      (_event, session) => {
-        currentUser =
-          session?.user || null;
-
-        updateAuthUi();
-        render();
-        refreshNotificationState();
-      }
-    );
-
-    await loadRecords();
-
-    setupRealtime();
-    await refreshNotificationState();
-
-  } catch (error) {
-
-    console.error(
-      'Startup error:',
-      error
-    );
-
-
-    alert(
-      'The DGSL Site Register could not connect to Supabase.'
-    );
-
-  }
-
-}
-
-
-startApp();
-
 // Prevent iOS touch scrolling from leaking out of the PDF viewer.
 document.addEventListener(
   'touchmove',
