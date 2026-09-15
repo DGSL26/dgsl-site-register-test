@@ -20,6 +20,7 @@ let supabaseClient = null;
 let records = [];
 let editing = null;
 let filter = 'All';
+let permitFilter = null;
 
 const SITE_VERSION = '1.2.8';
 const NOTIFICATIONS_TABLE = 'site_notifications_test';
@@ -135,112 +136,75 @@ function openSettingsDialog() {
     dialog.innerHTML = `
       <div class="header-dialog-inner">
         <div class="header-dialog-head">
-          <div>
-            <p class="eyebrow">DGSL SITE REGISTER</p>
-            <h2>Settings</h2>
-          </div>
+          <div><p class="eyebrow">DGSL SITE REGISTER</p><h2 id="settingsDialogTitle">Settings</h2></div>
           <button type="button" class="icon" id="closeSettings" aria-label="Close">×</button>
         </div>
-        <div class="settings-options">
-          <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
-          <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
-          <button type="button" id="settingsDataManagement" class="settings-option">Data Management <span id="dataManagementBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
-          <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
+        <div id="settingsMainView">
+          <div class="settings-options">
+            <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
+            <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
+            <button type="button" id="settingsDataManagement" class="settings-option settings-management-option">Data Management <span id="dataManagementBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
+            <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
+          </div>
         </div>
-      </div>
-    `;
+        <div id="settingsManagementView" hidden>
+          <div class="settings-options">
+            <button type="button" id="settingsBugReports" class="settings-option settings-management-item">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
+            <button type="button" id="settingsExport" class="settings-option settings-management-item">Export Data</button>
+            <label class="settings-option settings-management-item settings-import-option" for="settingsImport"><span>Import Data</span><input id="settingsImport" type="file" accept="application/json" hidden></label>
+          </div>
+        </div>
+      </div>`;
     document.body.appendChild(dialog);
-
-    dialog.querySelector('#closeSettings').onclick = () => dialog.close();
-    dialog.querySelector('#settingsChangeLog').onclick = () => {
-      dialog.close();
-      openChangeLogDialog();
+    const showMainSettings = () => {
+      dialog.querySelector('#settingsMainView').hidden = false;
+      dialog.querySelector('#settingsManagementView').hidden = true;
+      dialog.querySelector('#settingsDialogTitle').textContent = 'Settings';
     };
-    dialog.querySelector('#settingsBugReport').onclick = () => {
-      dialog.close();
-      openBugReportDialog();
-    };
+    dialog.querySelector('#closeSettings').onclick = () => { showMainSettings(); dialog.close(); };
+    dialog.querySelector('#settingsChangeLog').onclick = () => { dialog.close(); showMainSettings(); openChangeLogDialog(); };
+    dialog.querySelector('#settingsBugReport').onclick = () => { dialog.close(); showMainSettings(); openBugReportDialog(); };
     dialog.querySelector('#settingsDataManagement').onclick = () => {
-      showDataManagementView(dialog);
+      dialog.querySelector('#settingsMainView').hidden = true;
+      dialog.querySelector('#settingsManagementView').hidden = false;
+      dialog.querySelector('#settingsDialogTitle').textContent = 'Data Management';
+      refreshBugReportsBadge();
     };
-    dialog.querySelector('#settingsLogout').onclick = () => {
-      dialog.close();
-      showLogoutConfirmDialog();
+    dialog.querySelector('#settingsBugReports').onclick = () => { dialog.close(); showMainSettings(); openBugReportsDialog(); };
+    dialog.querySelector('#settingsExport').onclick = () => {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }));
+      link.download = `DGSL-site-register-${today()}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 0);
     };
+    dialog.querySelector('#settingsImport').onchange = async e => {
+      const file = e.target.files?.[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          if (!Array.isArray(imported)) throw new Error('Invalid backup');
+          for (const record of imported) {
+            const databaseRecord = toDatabase(record);
+            const { error } = await supabaseClient.from('handovers_test').upsert(databaseRecord);
+            if (error) throw error;
+          }
+          await loadRecords(); alert('Backup imported.');
+        } catch (error) { console.error(error); alert('That file is not a valid DGSL backup.'); }
+        finally { e.target.value = ''; }
+      };
+      reader.readAsText(file);
+    };
+    dialog.querySelector('#settingsLogout').onclick = () => { dialog.close(); showMainSettings(); showLogoutConfirmDialog(); };
+    dialog.addEventListener('close', showMainSettings);
   }
-  if (dialog.dataset.view === 'data-management') {
-    dialog.dataset.view = 'settings';
-    const options = dialog.querySelector('.settings-options');
-    if (options) {
-      options.innerHTML = `
-        <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
-        <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
-        <button type="button" id="settingsDataManagement" class="settings-option">Data Management <span id="dataManagementBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
-        <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
-      `;
-      options.querySelector('#settingsChangeLog').onclick = () => { dialog.close(); openChangeLogDialog(); };
-      options.querySelector('#settingsBugReport').onclick = () => { dialog.close(); openBugReportDialog(); };
-      options.querySelector('#settingsDataManagement').onclick = () => { showDataManagementView(dialog); };
-      options.querySelector('#settingsLogout').onclick = () => { dialog.close(); showLogoutConfirmDialog(); };
-    }
-  }
+  dialog.querySelector('#settingsMainView').hidden = false;
+  dialog.querySelector('#settingsManagementView').hidden = true;
+  dialog.querySelector('#settingsDialogTitle').textContent = 'Settings';
   if (!dialog.open) dialog.showModal();
   showBugReportsButtonForAdmin();
 }
-
-
-function showDataManagementView(dialog) {
-  dialog.dataset.view = 'data-management';
-  const options = dialog.querySelector('.settings-options');
-  if (!options) return;
-
-  options.innerHTML = `
-    <button type="button" id="settingsBugReports" class="settings-option" style="position:relative;">Bug Reports <span id="bugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
-    <button type="button" id="settingsExport" class="settings-option">Export Data</button>
-    <label class="settings-option settings-import-option" for="settingsImport">
-      <span>Import Data</span>
-      <input id="settingsImport" type="file" accept="application/json" hidden>
-    </label>
-  `;
-
-  options.querySelector('#settingsBugReports').onclick = () => {
-    dialog.close();
-    openBugReportsDialog();
-  };
-  options.querySelector('#settingsExport').onclick = () => {
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }));
-    link.download = `DGSL-site-register-${today()}.json`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(link.href), 0);
-  };
-  options.querySelector('#settingsImport').onchange = async e => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const imported = JSON.parse(reader.result);
-        if (!Array.isArray(imported)) throw new Error('Invalid backup');
-        for (const record of imported) {
-          const databaseRecord = toDatabase(record);
-          const { error } = await supabaseClient.from('handovers_test').upsert(databaseRecord);
-          if (error) throw error;
-        }
-        await loadRecords();
-        alert('Backup imported.');
-      } catch (error) {
-        console.error(error);
-        alert('That file is not a valid DGSL backup.');
-      } finally {
-        e.target.value = '';
-      }
-    };
-    reader.readAsText(file);
-  };
-  refreshBugReportsBadge();
-}
-
 
 const BUG_REPORTS_TABLE = 'bug_reports_test';
 
@@ -256,19 +220,13 @@ function bugReportEscape(value) {
 }
 
 function updateBugReportsBadge(unreadCount) {
+  const button = document.getElementById('settingsBugReports');
+  const badge = document.getElementById('bugReportsBadge');
+  if (!button || !badge) return;
   const count = Number(unreadCount) || 0;
-  const text = count > 99 ? '99+' : (count > 0 ? String(count) : '');
-  const display = count > 0 ? 'inline-flex' : 'none';
-
-  [
-    document.getElementById('bugReportsBadge'),
-    document.getElementById('dataManagementBadge')
-  ].forEach(badge => {
-    if (!badge) return;
-    badge.textContent = text;
-    badge.className = 'notification-badge bug-reports-badge';
-    badge.style.display = display;
-  });
+  badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
+  badge.className = 'notification-badge bug-reports-badge';
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
 async function refreshBugReportsBadge() {
@@ -291,7 +249,9 @@ async function refreshBugReportsBadge() {
 
 function showBugReportsButtonForAdmin() {
   const button = document.getElementById('settingsBugReports');
+  const managementButton = document.getElementById('settingsDataManagement');
   if (button) button.style.display = isBugReportAdmin() ? '' : 'none';
+  if (managementButton) managementButton.style.display = isBugReportAdmin() ? '' : 'none';
   if (isBugReportAdmin()) refreshBugReportsBadge();
   else updateBugReportsBadge(0);
 }
@@ -1385,12 +1345,51 @@ function updateSummaryCardSelection() {
     card.setAttribute('aria-pressed', selected ? 'true' : 'false');
   });
 
-  const label = filter === 'All'
-    ? 'Showing: All Work Permits'
-    : `Showing: ${filter.replace('Work Permit on Hold', 'Work Permits On Hold').replace('Work Permit Open', 'Open Work Permits').replace('Work Permit Closed', 'Closed Work Permits')}`;
+  const label = permitFilter
+    ? `Showing: ${permitFilter}`
+    : filter === 'All'
+      ? 'Showing: All Work Permits'
+      : `Showing: ${filter.replace('Work Permit on Hold', 'Work Permits On Hold').replace('Work Permit Open', 'Open Work Permits').replace('Work Permit Closed', 'Closed Work Permits')}`;
 
   const indicator = document.getElementById('activeFilterLabel');
   if (indicator) indicator.textContent = label;
+}
+
+function isOlderThanOneWeek(value) {
+  if (!value) return false;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  const cutoff = new Date();
+  cutoff.setHours(0, 0, 0, 0);
+  cutoff.setDate(cutoff.getDate() - 7);
+  return date < cutoff;
+}
+
+function updatePermitFilterUi() {
+  const button = document.getElementById('permitFilterButton');
+  const menu = document.getElementById('permitFilterMenu');
+  if (!button || !menu) return;
+  button.classList.toggle('active', !!permitFilter);
+  button.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
+  document.querySelectorAll('[data-permit-filter]').forEach(option => {
+    const selected = (option.dataset.permitFilter || '') === (permitFilter || '');
+    option.classList.toggle('active', selected);
+    option.setAttribute('aria-checked', selected ? 'true' : 'false');
+  });
+}
+
+function setupPermitFilter() {
+  const button = document.getElementById('permitFilterButton');
+  const menu = document.getElementById('permitFilterMenu');
+  if (!button || !menu) return;
+  button.onclick = event => { event.stopPropagation(); menu.hidden = !menu.hidden; updatePermitFilterUi(); };
+  document.querySelectorAll('[data-permit-filter]').forEach(option => {
+    option.onclick = () => { permitFilter = option.dataset.permitFilter || null; menu.hidden = true; updatePermitFilterUi(); render(); };
+  });
+  document.addEventListener('click', event => {
+    if (!menu.hidden && !menu.contains(event.target) && event.target !== button) { menu.hidden = true; updatePermitFilterUi(); }
+  });
+  updatePermitFilterUi();
 }
 
 function render() {
@@ -1406,21 +1405,17 @@ function render() {
 
   const filtered =
     records
-      .filter(x =>
-
-        (
-          filter === 'All' ||
-          x.status === filter
-        )
-
-        &&
-
-        Object.values(x)
-          .join(' ')
-          .toLowerCase()
-          .includes(q)
-
-      )
+      .filter(x => {
+        const matchesCard = filter === 'All' || x.status === filter;
+        const matchesPermitFilter =
+          permitFilter === 'Open/On Hold'
+            ? (x.status === 'Work Permit Open' || x.status === 'Work Permit on Hold')
+            : permitFilter === 'Open Longer Than 1 Week'
+              ? (x.status === 'Work Permit Open' && isOlderThanOneWeek(x.handoverDate))
+              : true;
+        const matchesSearch = Object.values(x).join(' ').toLowerCase().includes(q);
+        return matchesCard && matchesPermitFilter && matchesSearch;
+      })
       .sort((a, b) => {
         const aDate = String(a.handoverDate || '');
         const bDate = String(b.handoverDate || '');
@@ -1946,7 +1941,6 @@ function showRowMoreDialog(record) {
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         ${currentUser ? '<button type="button" id="rowMoreCopy">Copy</button>' : '<button type="button" id="rowMoreDownload">Download PDF</button>'}
         <button type="button" id="rowMoreShare">Share</button>
-        ${currentUser ? '<button type="button" id="rowMoreDelete" class="danger">Delete Handover</button>' : ''}
       </div>
       <div style="margin-top:18px;">
         <button type="button" id="rowMoreCancel">Cancel</button>
@@ -1982,29 +1976,6 @@ function showRowMoreDialog(record) {
     dialog.close();
     setTimeout(() => sharePdfToDevice(record), 0);
   };
-
-  const moreDeleteButton = dialog.querySelector('#rowMoreDelete');
-  if (moreDeleteButton) {
-    moreDeleteButton.onclick = async () => {
-      if (!currentUser) return;
-      if (!confirm('Delete this handover record?')) return;
-      dialog.close();
-      try {
-        if (Array.isArray(record.photos)) {
-          for (const url of record.photos) await deletePhoto(url);
-        }
-        const { error } = await supabaseClient
-          .from('handovers_test')
-          .delete()
-          .eq('id', record.id);
-        if (error) throw error;
-        await loadRecords();
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('There was a problem deleting the handover.');
-      }
-    };
-  }
 
   if (!dialog.open) dialog.showModal();
 }
@@ -3769,6 +3740,10 @@ document
 
       const applyCardFilter = () => {
         filter = card.dataset.filterCard || 'All';
+        permitFilter = null;
+        const permitMenu = document.getElementById('permitFilterMenu');
+        if (permitMenu) permitMenu.hidden = true;
+        updatePermitFilterUi();
         render();
       };
 
@@ -3791,6 +3766,8 @@ document
 
 $('#search').oninput =
   render;
+
+setupPermitFilter();
 
 
 // ============================================================
