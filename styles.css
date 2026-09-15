@@ -1601,6 +1601,9 @@ body.change-log-open {
 .header-dialog-head h2 { color:#1f4e78; }
 .settings-options { display:grid; gap:10px; padding-top:18px; }
 .settings-option { width:100%; text-align:left; padding:12px 14px; background:#fff; }
+.settings-section { display:grid; gap:10px; margin-top:4px; padding-top:15px; border-top:1px solid #e0e5e9; }
+.settings-section-title { font-size:12px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:#607080; margin-bottom:1px; }
+.settings-import-option { display:block; cursor:pointer; box-sizing:border-box; }
 .settings-logout { color:#b42318; }
 .notifications-empty { padding:22px 4px 5px; color:#68737d; }
 .version-bar { cursor:default !important; }
