@@ -372,6 +372,37 @@ main {
 
 
 
+/* Individual handover-row status bands: same 4px thickness as KPI card bands. */
+tr.row-status-open td:first-child,
+tr.row-status-closed td:first-child,
+tr.row-status-hold td:first-child {
+  position: relative;
+}
+
+tr.row-status-open td:first-child::before,
+tr.row-status-closed td:first-child::before,
+tr.row-status-hold td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 4px;
+}
+
+tr.row-status-open td:first-child::before {
+  background: #d99b24;
+}
+
+tr.row-status-closed td:first-child::before {
+  background: #3b8f5a;
+}
+
+tr.row-status-hold td:first-child::before {
+  background: #c84b4b;
+}
+
 /* Summary cards: clearly show which dashboard filter is selected. */
 .cards article.summary-card-clickable {
   cursor: pointer;
@@ -1880,35 +1911,3 @@ body.change-log-open {
 
 /* Remove the divider line directly beneath the Bug Reports title. */
 #dgslBugReportsDialog .header-dialog-head { border-bottom: 0 !important; }
-
-/* Individual rounded status band on the left of each handover row.
-   The band is inset vertically so each row has its own separate pill. */
-tr.row-status-open td:first-child,
-tr.row-status-closed td:first-child,
-tr.row-status-hold td:first-child {
-  position: relative;
-}
-
-tr.row-status-open td:first-child::before,
-tr.row-status-closed td:first-child::before,
-tr.row-status-hold td:first-child::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 7px;
-  bottom: 7px;
-  width: 6px;
-  border-radius: 999px;
-}
-
-tr.row-status-open td:first-child::before {
-  background: #d99b24;
-}
-
-tr.row-status-closed td:first-child::before {
-  background: #3b8f5a;
-}
-
-tr.row-status-hold td:first-child::before {
-  background: #c84b4b;
-}
