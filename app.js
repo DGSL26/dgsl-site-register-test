@@ -1549,7 +1549,27 @@ function render() {
       .map(
         x => `
 
-        <tr class="${x.handover === 'COPY' ? 'copied-handover-row' : ''}" data-row-id="${esc(x.id)}">
+        <tr class="${
+  x.handover === 'COPY'
+    ? `copied-handover-row ${
+        x.status === 'Work Permit Open'
+          ? 'row-status-open'
+          : x.status === 'Work Permit Closed'
+            ? 'row-status-closed'
+            : x.status === 'Work Permit on Hold'
+              ? 'row-status-hold'
+              : ''
+      }`
+    : (
+        x.status === 'Work Permit Open'
+          ? 'row-status-open'
+          : x.status === 'Work Permit Closed'
+            ? 'row-status-closed'
+            : x.status === 'Work Permit on Hold'
+              ? 'row-status-hold'
+              : ''
+      )
+}" data-row-id="${esc(x.id)}">
 
           <td>
             <b>

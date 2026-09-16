@@ -1880,38 +1880,1901 @@ body.change-log-open {
 
 /* Remove the divider line directly beneath the Bug Reports title. */
 #dgslBugReportsDialog .header-dialog-head { border-bottom: 0 !important; }
+/* ============================================================
+   DGSL SITE REGISTER
+   ============================================================ */
 
-/* Phone only: balance the header so the logo and site title each use half the row. */
-@media (max-width: 600px) {
-  header > div:first-child {
-    width: 100% !important;
-    max-width: 100% !important;
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-    align-items: center !important;
-    gap: 10px !important;
-    overflow: visible !important;
+
+* {
+  box-sizing: border-box;
+}
+
+
+body {
+
+  margin: 0;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  background: #f4f6f8;
+
+  color: #1f2933;
+
+}
+
+
+button,
+input,
+select,
+textarea {
+
+  font: inherit;
+
+}
+
+
+button {
+
+  cursor: pointer;
+
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+
+header {
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #d9e0e6;
+
+  padding: 20px 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+}
+
+
+.site-title {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+}
+
+
+.site-logo {
+
+  width: 150px;
+
+  height: auto;
+
+  display: block;
+
+  object-fit: contain;
+
+}
+
+
+.eyebrow {
+
+  margin: 0 0 4px;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.5px;
+
+  color: #6b7280;
+
+}
+
+
+h1 {
+
+  margin: 0;
+
+  font-size: 27px;
+
+  color: #1f4e78;
+
+}
+
+
+h2 {
+
+  margin: 0;
+
+}
+
+
+h3 {
+
+  margin: 0 0 5px;
+
+}
+
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+
+button {
+
+  border: 1px solid #cbd5df;
+
+  background: #ffffff;
+
+  color: #243447;
+
+  border-radius: 6px;
+
+  padding: 9px 14px;
+
+}
+
+
+button:hover {
+
+  background: #f1f5f8;
+
+}
+
+
+button.primary {
+
+  background: #1f4e78;
+
+  color: #ffffff;
+
+  border-color: #1f4e78;
+
+}
+
+
+button.primary:hover {
+
+  background: #173b5d;
+
+}
+
+
+button.danger {
+
+  color: #b42318;
+
+  border-color: #efb4b0;
+
+}
+
+
+button.icon {
+
+  font-size: 26px;
+
+  padding: 2px 9px;
+
+  border: none;
+
+  background: transparent;
+
+}
+
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+
+
+main {
+
+  max-width: 1500px;
+
+  margin: 0 auto;
+
+  padding: 25px;
+
+}
+
+
+/* ============================================================
+   SUMMARY CARDS
+   ============================================================ */
+
+
+.cards {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 16px;
+
+  margin-bottom: 20px;
+
+}
+
+
+.cards article {
+
+  background: #ffffff;
+
+  border: 1px solid #dce3e8;
+
+  border-radius: 9px;
+
+  padding: 18px;
+
+  position: relative;
+
+}
+
+.summary-card-icon {
+  position: absolute;
+  top: 26px;
+  right: 18px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.summary-card-icon svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cards article.blue .summary-card-icon { background: #eaf2ff; }
+.cards article.blue .summary-card-icon svg { stroke: #2f80ed; }
+.cards article.amber .summary-card-icon { background: #fff5dc; }
+.cards article.amber .summary-card-icon svg { stroke: #d99b24; }
+.cards article.green .summary-card-icon { background: #e7f6ed; }
+.cards article.green .summary-card-icon svg { stroke: #3b8f5a; }
+.cards article.red .summary-card-icon { background: #fdeaea; }
+.cards article.red .summary-card-icon svg { stroke: #c84b4b; }
+
+
+.cards article span {
+
+  display: block;
+
+  color: #68737d;
+
+  font-size: 13px;
+
+  margin-bottom: 8px;
+
+}
+
+.cards article > span:not(.summary-card-icon) {
+  padding-right: 52px;
+}
+
+
+.cards article strong {
+
+  display: block;
+
+  font-size: 28px;
+
+}
+
+
+.cards article .week-change {
+
+  display: block;
+
+  margin-top: 7px;
+
+  font-size: 13px;
+
+  color: #68737d;
+
+}
+
+
+.cards article.blue .week-change {
+
+  color: #2f80ed;
+
+}
+
+
+.cards article.amber .week-change {
+
+  color: #d99b24;
+
+}
+
+
+.cards article.green .week-change {
+
+  color: #3b8f5a;
+
+}
+
+
+.cards article.red .week-change {
+
+  color: #c84b4b;
+
+}
+
+
+.cards article.blue {
+
+  border-left: 4px solid #2f80ed;
+
+}
+
+
+.cards article.amber {
+
+  border-left: 4px solid #d99b24;
+
+}
+
+
+.cards article.green {
+
+  border-left: 4px solid #3b8f5a;
+
+}
+
+
+.cards article.red {
+
+  border-left: 4px solid #c84b4b;
+
+}
+
+
+
+/* Summary cards: clearly show which dashboard filter is selected. */
+.cards article.summary-card-clickable {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.cards article.summary-card-clickable:focus-visible {
+  outline: 2px solid #2f80ed;
+  outline-offset: 2px;
+}
+
+.cards article.summary-card-selected {
+  border-width: 2px !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.10);
+}
+
+.cards article.blue.summary-card-selected {
+  border-color: #2f80ed !important;
+  background: #f5f9ff !important;
+}
+
+.cards article.amber.summary-card-selected {
+  border-color: #d99b24 !important;
+  background: #fffaf0 !important;
+}
+
+.cards article.green.summary-card-selected {
+  border-color: #3b8f5a !important;
+  background: #f4fbf7 !important;
+}
+
+.cards article.red.summary-card-selected {
+  border-color: #c84b4b !important;
+  background: #fff6f6 !important;
+}
+
+.active-filter-label {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b6670;
+}
+
+/* ============================================================
+   PANEL
+   ============================================================ */
+
+
+.panel {
+
+  background: #ffffff;
+
+  border: 1px solid #dce3e8;
+
+  border-radius: 9px;
+
+  overflow: hidden;
+
+}
+
+
+.toolbar {
+
+  padding: 20px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+}
+
+
+.toolbar p {
+
+  margin: 5px 0 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+
+}
+
+
+.actions {
+
+  display: flex;
+
+  gap: 8px;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+}
+
+
+.actions input[type="search"] {
+
+  width: 240px;
+
+}
+
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+
+
+input,
+select,
+textarea {
+
+  width: 100%;
+
+  border: 1px solid #cbd5df;
+
+  border-radius: 6px;
+
+  padding: 9px 10px;
+
+  background: #ffffff;
+
+  color: #1f2933;
+
+}
+
+
+input:focus,
+select:focus,
+textarea:focus {
+
+  outline: none;
+
+  border-color: #1f4e78;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(31, 78, 120, 0.12);
+
+}
+
+
+textarea {
+
+  resize: vertical;
+
+}
+
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+
+
+.filters {
+
+  display: flex;
+
+  gap: 7px;
+
+  padding: 0 20px 16px;
+
+  flex-wrap: wrap;
+
+}
+
+
+.filters button {
+
+  border-radius: 20px;
+
+  padding: 7px 13px;
+
+}
+
+
+.filters button.active {
+
+  background: #1f4e78;
+
+  color: #ffffff;
+
+  border-color: #1f4e78;
+
+}
+
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+
+
+.table-wrap {
+
+  width: 100%;
+
+  overflow-x: auto;
+
+}
+
+
+table {
+
+  width: 100%;
+
+  border-collapse: collapse;
+
+  min-width: 950px;
+
+}
+
+
+th {
+
+  background: #f3f6f8;
+
+  text-align: left;
+
+  font-size: 12px;
+
+  color: #56616b;
+
+  padding: 12px;
+
+  border-top: 1px solid #e0e5e9;
+
+  border-bottom: 1px solid #e0e5e9;
+
+}
+
+
+td {
+
+  padding: 12px;
+
+  border-bottom: 1px solid #edf0f2;
+
+  vertical-align: top;
+
+  font-size: 13px;
+
+}
+
+
+td small {
+
+  color: #727c85;
+
+}
+
+/* Keep the register dates neat and on one line. */
+td.table-date {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* Keep Edit and View headings and their cells centered over the controls. */
+th:nth-child(7),
+th:nth-child(8),
+td:nth-child(7),
+td:nth-child(8) {
+  text-align: center;
+}
+
+.status {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #222;
+  white-space: nowrap;
+}
+
+.status-open {
+  background: #f6c453;
+}
+
+.status-closed {
+  background: #7acb8a;
+}
+
+.status-hold {
+  background: #ef7777;
+}
+
+
+.empty {
+
+  padding: 25px;
+
+  text-align: center;
+
+  color: #737d86;
+
+}
+
+
+.hidden {
+
+  display: none !important;
+
+}
+
+
+/* ============================================================
+   DIALOG / FORM
+   ============================================================ */
+
+
+dialog {
+
+  width: min(950px, 94vw);
+
+  max-height: 92vh;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 20px 60px
+    rgba(0, 0, 0, 0.25);
+
+}
+
+
+dialog::backdrop {
+
+  background:
+    rgba(15, 23, 42, 0.55);
+
+}
+
+
+#handoverForm {
+
+  padding: 25px;
+
+  overflow-y: auto;
+
+  max-height: 92vh;
+
+}
+
+
+.form-logo {
+
+  text-align: center;
+
+  margin-bottom: 12px;
+
+}
+
+
+.form-logo img {
+
+  width: 190px;
+
+  max-width: 70%;
+
+  height: auto;
+
+  display: inline-block;
+
+}
+
+
+.form-head {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-start;
+
+  gap: 15px;
+
+  padding-bottom: 18px;
+
+  border-bottom: 1px solid #e0e5e9;
+
+}
+
+
+.form-head h2 {
+
+  color: #1f4e78;
+
+}
+
+
+.form-grid {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+
+  padding-top: 20px;
+
+}
+
+
+.form-grid label {
+
+  display: block;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+}
+
+
+.form-grid label input,
+.form-grid label select,
+.form-grid label textarea {
+
+  margin-top: 6px;
+
+  font-weight: 400;
+
+}
+
+
+.wide {
+
+  grid-column: 1 / -1;
+
+}
+
+
+.section-heading {
+
+  border-top: 1px solid #dce3e8;
+
+  padding-top: 18px;
+
+  margin-top: 5px;
+
+}
+
+
+.section-heading h3 {
+
+  color: #1f4e78;
+
+  font-size: 17px;
+
+}
+
+
+.section-heading p {
+
+  margin: 4px 0 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+
+}
+
+
+.form-grid p {
+
+  margin-top: 5px;
+
+  color: #59636c;
+
+  font-size: 13px;
+
+}
+
+
+/* ============================================================
+   SIGNATURE CANVASES
+   ============================================================ */
+
+
+#contractorSignature,
+#dgslSignature {
+
+  display: block;
+
+  width: 100%;
+
+  max-width: 600px;
+
+  height: 180px;
+
+  border: 1px solid #cbd5df;
+
+  border-radius: 6px;
+
+  background: #ffffff;
+
+  touch-action: pan-y;
+
+}
+
+
+#clearContractorSignature,
+#clearDgslSignature {
+
+  margin-top: 8px;
+
+}
+
+
+/* ============================================================
+   PHOTO PREVIEW
+   ============================================================ */
+
+
+.photo-preview {
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+}
+
+
+.photo-preview img {
+
+  width: 110px;
+
+  height: 80px;
+
+  object-fit: cover;
+
+  border-radius: 6px;
+
+  border: 1px solid #ccc;
+
+}
+
+
+/* ============================================================
+   FORM ACTIONS
+   ============================================================ */
+
+
+.form-actions {
+
+  display: grid;
+
+  grid-template-columns:
+    auto 1fr auto auto auto;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding-top: 20px;
+
+  margin-top: 20px;
+
+  border-top: 1px solid #e0e5e9;
+
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+
+@media (max-width: 800px) {
+
+  header {
+
+    padding: 15px;
+
+    align-items: flex-start;
+
+    flex-direction: column;
+
   }
 
-  header > div:first-child > img {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    display: block !important;
-    object-fit: contain !important;
+
+  .site-logo {
+
+    width: 120px;
+
   }
 
-  header > div:first-child > div {
-    min-width: 0 !important;
-    width: 100% !important;
+
+  h1 {
+
+    font-size: 22px;
+
   }
 
-  header > div:first-child h1 {
-    font-size: 26px !important;
-    line-height: 1.08 !important;
+
+  main {
+
+    padding: 15px;
+
   }
 
-  header > div:first-child .eyebrow {
-    font-size: 12px !important;
+
+  .cards {
+
+    grid-template-columns:
+      repeat(2, 1fr);
+
   }
+
+
+  .toolbar {
+
+    align-items: stretch;
+
+    flex-direction: column;
+
+  }
+
+
+  .actions {
+
+    width: 100%;
+
+  }
+
+
+  .actions input[type="search"] {
+
+    width: 100%;
+
+  }
+
+
+  .form-grid {
+
+    grid-template-columns:
+      1fr;
+
+  }
+
+
+  .wide {
+
+    grid-column: 1;
+
+  }
+
+
+  .form-actions {
+
+    grid-template-columns:
+      1fr 1fr;
+
+  }
+
+
+  .form-actions span {
+
+    display: none;
+
+  }
+
+
+  .form-actions .danger {
+
+    grid-column: 1 / -1;
+
+  }
+
+}
+
+
+@media (max-width: 500px) {
+
+  .cards {
+
+    grid-template-columns:
+      1fr 1fr;
+
+  }
+
+
+  .site-title {
+
+    gap: 10px;
+
+  }
+
+
+  .site-logo {
+
+    width: 100px;
+
+  }
+
+
+  .form-actions {
+
+    grid-template-columns:
+      1fr;
+
+  }
+
+}
+
+
+/* Match date fields to normal form fields on tablets and phones */
+@media (max-width: 800px) {
+
+  .form-grid label input[type="date"] {
+    width: 100%;
+    height: 36px;
+    min-height: 36px;
+    max-height: 36px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    box-sizing: border-box;
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+}
+
+/* Match the Import backup control to the Export backup button */
+.actions label.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid #cbd5df;
+  background: #ffffff;
+  color: #243447;
+  border-radius: 6px;
+  padding: 9px 14px;
+}
+
+.actions label.button:hover {
+  background: #f1f5f8;
+}
+
+
+/* Signature boxes turn red only while drawing is deliberately activated. */
+canvas.signature-active {
+  border: 2px solid #d32f2f !important;
+  touch-action: none;
+}
+
+/* Prevent mobile browsers from zooming the page when a form field is focused. */
+@media (max-width: 700px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+
+/* ============================================================
+   FIXED VERSION BAR
+   ============================================================ */
+
+.version-bar {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 1000;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0 12px;
+  background: #1f4e78;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: .2px;
+}
+
+body {
+  padding-bottom: 28px;
+}
+
+/* ============================================================
+   ROW ACTION POPUP — COMPACT ON ALL DEVICES
+   ============================================================ */
+
+#rowActionDialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(340px, calc(100vw - 32px)) !important;
+  min-width: 0 !important;
+  max-width: min(340px, calc(100vw - 32px)) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+#rowActionDialog > div {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* ============================================================
+   FORM DIALOG — SHORTER WINDOW + INTERNAL SCROLL
+   ============================================================ */
+
+#formDialog {
+  width: min(950px, 94vw) !important;
+  max-width: 950px !important;
+  height: 82vh !important;
+  max-height: 82vh !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  overscroll-behavior: contain !important;
+  box-sizing: border-box !important;
+}
+
+#handoverForm {
+  height: 82vh !important;
+  max-height: 82vh !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  box-sizing: border-box !important;
+}
+
+/* Make the iPhone/iPad date field the same compact height as the other fields. */
+#handoverForm input[type="date"] {
+  width: 100% !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 6px 10px !important;
+  margin-top: 6px !important;
+  box-sizing: border-box !important;
+  font-size: 16px !important;
+  line-height: 20px !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Keep the page behind the form from participating in touch scrolling. */
+body.form-dialog-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+
+/* Light red background for copied handovers until they are edited and saved. */
+tr.copied-handover-row td {
+  background: #ffd6d6 !important;
+}
+
+
+/* ============================================================
+   PDF VIEWER — SAME COMPACT SIZE AS HANDOVER FORM
+   ============================================================ */
+
+#pdfDialog {
+  width: min(950px, 94vw) !important;
+  max-width: 950px !important;
+  height: 82vh !important;
+  max-height: 82vh !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  overscroll-behavior: contain !important;
+  box-sizing: border-box !important;
+}
+
+#pdfDialog > div {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+#pdfViewer {
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+
+html.pdf-dialog-open,
+body.pdf-dialog-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+/* Keep the fixed version bar stable during mobile scrolling without a transform. */
+.version-bar {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
+  -webkit-transform: none !important;
+  will-change: auto !important;
+  contain: layout paint style;
+}
+
+
+/* ============================================================
+   SITE PHOTO VIEWER
+   ============================================================ */
+
+#photoViewerDialog {
+  width: min(900px, 92vw) !important;
+  max-width: 900px !important;
+  max-height: 88vh !important;
+  padding: 12px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+  background: #111 !important;
+  overflow: hidden !important;
+}
+
+#photoViewerDialog::backdrop {
+  background: rgba(0,0,0,.75) !important;
+}
+
+.photo-viewer-inner {
+  position: relative;
+  width: 100%;
+  max-height: calc(88vh - 24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-viewer-image {
+  display: block;
+  max-width: 100%;
+  max-height: calc(88vh - 24px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.photo-viewer-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border-radius: 50%;
+  font-size: 25px;
+  line-height: 32px;
+  background: #d32f2f;
+  color: #fff;
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+/* FINAL FOOTER VERSION BAR: document bottom, not viewport-fixed. */
+html, body {
+  min-height: 100%;
+}
+
+/* Keep the footer at the true bottom of the document.
+   Short lists still create a small amount of page height below the viewport,
+   so the footer is reached by scrolling to the bottom rather than floating
+   on the screen. */
+body {
+  min-height: calc(100vh + 28px);
+  padding-bottom: 0 !important;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+.version-bar {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  top: auto !important;
+  transform: none !important;
+  -webkit-transform: none !important;
+  width: 100% !important;
+  flex: 0 0 28px;
+  height: 28px !important;
+  margin: 0 !important;
+  z-index: 1000;
+}
+
+/* Keep the photo viewer centered and lock the page behind it. */
+#photoViewerDialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(900px, 92vw) !important;
+  max-width: 900px !important;
+  height: auto !important;
+  max-height: 88vh !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+#photoViewerDialog .photo-viewer-inner {
+  touch-action: none !important;
+  overflow: hidden !important;
+}
+
+#photoViewerDialog .photo-viewer-image {
+  touch-action: none !important;
+  transform: translate3d(0, 0, 0) scale(1);
+  transform-origin: center center;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+html.photo-viewer-open,
+body.photo-viewer-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+
+
+/* ============================================================
+   MOBILE PAGE SCALE / LAYOUT RESTORE
+   ============================================================ */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 800px) {
+  .cards {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px;
+  }
+
+  .cards article {
+    min-width: 0;
+  }
+
+  main {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Keep the page itself fixed to the tablet viewport.
+   Only the handover table is allowed to scroll horizontally. */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+header {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+header > div:first-child {
+  min-width: 0 !important;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.header-actions {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+main {
+  width: 100%;
+  max-width: 1500px;
+  min-width: 0;
+}
+
+.panel {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
+}
+
+/* ============================================================\n   HEADER SETTINGS + NOTIFICATIONS — final positioning\n   ============================================================ */\n.header-actions { display:flex; align-items:center; gap:12px; margin-left:auto; }\n.header-icon-group { display:flex; align-items:center; gap:4px; margin-left:28px; }\n.header-icon-button { position:relative; width:42px; height:42px; padding:6px !important; border:0 !important; background:transparent !important; color:#111 !important; display:inline-flex; align-items:center; justify-content:center; }\n.header-icon-button:hover { background:#f1f5f8 !important; }\n.header-svg-icon { width:27px; height:27px; fill:none; stroke:#111; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }\n.header-icon-wrap { position:relative; display:inline-flex; }\n.notification-badge { position:absolute; top:-6px; right:-8px; min-width:17px; height:17px; padding:0 4px; border-radius:999px; background:#2f80ed; color:#fff; font-size:10px; font-weight:700; line-height:17px; text-align:center; border:1px solid #fff; }\n.auth-button { background:#008e39 !important; color:#fff !important; border-color:#008e39 !important; }\n.header-settings-dialog { width:min(380px, calc(100vw - 32px)) !important; max-width:380px !important; padding:0 !important; border:0 !important; border-radius:12px !important; overflow:hidden !important; }\n.header-dialog-inner { padding:22px; }\n.header-dialog-head { display:flex; align-items:center; justify-content:space-between; gap:15px; padding-bottom:15px; border-bottom:1px solid #e0e5e9; }\n.header-dialog-head h2 { color:#1f4e78; }\n.settings-options { display:grid; gap:10px; padding-top:18px; }\n.settings-option { width:100%; text-align:left; padding:12px 14px; background:#fff; }\n.settings-logout { color:#b42318; }\n.notifications-empty { padding:22px 4px 5px; color:#68737d; }\n.version-bar { cursor:default !important; }\n@media (max-width:800px) {\n  header { flex-direction:column !important; align-items:stretch !important; }\n  .header-actions { width:100%; margin-left:0; justify-content:flex-start; }\n  .header-icon-group { margin-left:auto; }\n  .header-icon-button { width:40px; height:40px; }\n  .header-svg-icon { width:25px; height:25px; }\n}\n
+
+/* ============================================================
+   VERSION BAR / CHANGE LOG
+   ============================================================ */
+button.version-bar {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0 !important;
+  border-radius: 0 !important;
+  cursor: default;
+  font-family: inherit;
+  text-align: center;
+}
+#changeLogDialog {
+  width: min(720px, calc(100vw - 32px)) !important;
+  max-width: 720px !important;
+  max-height: min(760px, calc(100vh - 40px)) !important;
+  margin: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  background: #fff !important;
+  color: #243447;
+}
+#changeLogDialog {
+  width: min(950px, 94vw) !important;
+  max-width: 950px !important;
+  height: 82vh !important;
+  max-height: 82vh !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  overscroll-behavior: contain !important;
+  box-sizing: border-box !important;
+}
+
+#changeLogDialog::backdrop { background: rgba(15,31,45,.62) !important; }
+
+.changelog-inner {
+  position: relative;
+  height: 82vh;
+  max-height: 82vh;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+html.change-log-open,
+body.change-log-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+.changelog-header { padding:26px 30px 20px; background:#f5f8fb; border-bottom:1px solid #dbe3ea; }
+.changelog-kicker { font-size:11px; font-weight:700; letter-spacing:1.2px; color:#1f4e78; margin-bottom:5px; }
+.changelog-header h2 { margin:0 0 6px; font-size:28px; color:#162b3d; }
+.changelog-header p { margin:0; font-size:14px; color:#607080; }
+.changelog-close { position:absolute; top:16px; right:18px; z-index:3; width:38px; height:38px; padding:0 !important; border:1px solid #cbd5df !important; border-radius:6px !important; background:#fff !important; color:#34495a; font-size:25px; line-height:36px; cursor:pointer; }
+.changelog-list { padding:22px 30px 8px; }
+.changelog-entry { padding:0 0 20px; margin:0 0 20px; border-bottom:1px solid #e1e7ec; }
+.changelog-entry:last-child { border-bottom:0; margin-bottom:0; }
+.changelog-version { font-size:18px; font-weight:700; color:#1f4e78; margin-bottom:10px; }
+.changelog-version .changelog-current { display:inline-block; margin-left:7px; padding:3px 8px; border-radius:999px; background:#7acb8a; color:#173a23; font-size:11px; font-weight:700; vertical-align:2px; }
+.changelog-entry ul { margin:0; padding-left:22px; }
+.changelog-entry li { margin:0 0 8px; line-height:1.45; font-size:14px; }
+.changelog-footer { padding:13px 30px 17px; border-top:1px solid #e1e7ec; text-align:center; font-size:12px; color:#71808d; }
+
+/* Header controls */
+.header-actions { display:flex; align-items:center; gap:12px; margin-left:auto; }
+.header-icon-group { display:flex; align-items:center; gap:4px; margin-left:28px; }
+.header-icon-button { position:relative; width:42px; height:42px; padding:6px !important; border:0 !important; background:transparent !important; color:#111 !important; display:inline-flex; align-items:center; justify-content:center; }
+.header-icon-button:hover { background:#f1f5f8 !important; }
+.header-svg-icon { width:27px; height:27px; fill:none; stroke:#111; stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round; }
+.header-settings-icon { width:29px; height:29px; }
+.header-icon-wrap { position:relative; display:inline-flex; }
+.notification-badge { position:absolute; top:-6px; right:-8px; min-width:17px; height:17px; padding:0 4px; border-radius:999px; background:#2f80ed; color:#fff; font-size:10px; font-weight:700; line-height:17px; text-align:center; border:1px solid #fff; }
+.auth-button { background:#008e39 !important; color:#fff !important; border-color:#008e39 !important; }
+.header-settings-dialog { width:min(380px, calc(100vw - 32px)) !important; max-width:380px !important; padding:0 !important; border:0 !important; border-radius:12px !important; overflow:hidden !important; }
+.header-dialog-inner { padding:22px; }
+.header-dialog-head { display:flex; align-items:center; justify-content:space-between; gap:15px; padding-bottom:15px; border-bottom:1px solid #e0e5e9; }
+.header-dialog-head h2 { color:#1f4e78; }
+.settings-options { display:grid; gap:10px; padding-top:18px; }
+.settings-option { width:100%; text-align:left; padding:12px 14px; background:#fff; }
+.settings-section { display:grid; gap:10px; margin-top:4px; padding-top:15px; border-top:1px solid #e0e5e9; }
+.settings-section-title { font-size:12px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:#607080; margin-bottom:1px; }
+.settings-import-option { display:block; cursor:pointer; box-sizing:border-box; border:1px solid #cbd5df; border-radius:6px; }
+.settings-logout { color:#b42318; }
+.notifications-empty { padding:22px 4px 5px; color:#68737d; }
+.version-bar { cursor:default !important; }
+
+@media (max-width:800px) {
+  header { flex-direction:column !important; align-items:stretch !important; }
+  .header-actions { width:100%; margin-left:0; justify-content:flex-start; }
+  .header-icon-group { margin-left:auto; }
+  .header-icon-button { width:40px; height:40px; }
+  .header-svg-icon { width:25px; height:25px; }
+  .header-settings-icon { width:27px; height:27px; }
+}
+@media (max-width:700px) {
+  html { -webkit-text-size-adjust:100%; }
+  .changelog-header,.changelog-list { padding-left:20px; padding-right:20px; }
+}
+
+/* ============================================================
+   SITE NOTIFICATIONS
+   ============================================================ */
+.notifications-dialog {
+  width: min(520px, calc(100vw - 32px)) !important;
+  max-width: 520px !important;
+}
+.notifications-content {
+  padding-top: 18px;
+}
+.notifications-empty {
+  padding: 8px 4px 5px;
+  color: #68737d;
+}
+.site-notification-card {
+  border: 1px solid #dbe3ea;
+  border-radius: 10px;
+  padding: 16px;
+  background: #f8fafc;
+}
+.site-notification-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f4e78;
+  margin-bottom: 5px;
+}
+.site-notification-version {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e8f1f8;
+  color: #1f4e78;
+  font-size: 12px;
+  font-weight: 700;
+}
+.site-notification-message {
+  color: #34495a;
+  line-height: 1.45;
+  margin-bottom: 16px;
+}
+.site-notification-refresh {
+  width: 100%;
+}
+
+
+/* ============================================================
+   ROW ACTION / SHARE DIALOGS
+   ============================================================ */
+#rowMoreDialog,
+#rowShareDialog {
+  max-height: none !important;
+  overflow: hidden !important;
+}
+
+/* The photo viewer uses the image itself for zoom and drag/pan. */
+#photoViewerDialog .photo-viewer-image {
+  transform-origin: center center !important;
+  will-change: transform;
+  touch-action: none !important;
+}
+
+.settings-cancel,
+#rowActionCancel,
+#rowMoreCancel,
+#copyConfirmCancel { color:#b42318 !important; border-color:#b42318 !important; background:#fff !important; }
+
+.settings-cancel:hover,
+#rowActionCancel:hover,
+#rowMoreCancel:hover,
+#copyConfirmCancel:hover { background:#fff1f1 !important; color:#b42318 !important; border-color:#b42318 !important; }
+
+/* ============================================================
+   SUMMARY CARD ICONS — desktop alignment/background fix
+   ============================================================ */
+.summary-card-icon {
+  display: grid !important;
+  place-items: center !important;
+  align-items: center !important;
+  justify-items: center !important;
+  line-height: 0 !important;
+  margin: 0 !important;
+}
+.summary-card-icon svg {
+  display: block !important;
+  width: 25px !important;
+  height: 25px !important;
+  margin: 0 !important;
+  flex: 0 0 auto !important;
+}
+.cards article.blue .summary-card-icon { background-color: #eaf2ff !important; }
+.cards article.amber .summary-card-icon { background-color: #fff5dc !important; }
+.cards article.green .summary-card-icon { background-color: #e7f6ed !important; }
+.cards article.red .summary-card-icon { background-color: #fdeaea !important; }
+
+/* Keep the Bug Reports unread count beside the button text. */
+#settingsBugReports .bug-reports-badge {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  margin-left: 8px !important;
+  vertical-align: middle !important;
+}
+
+/* Desktop summary bubbles: keep all four backgrounds equally visible. */
+@media (min-width: 801px) {
+  .cards article.blue .summary-card-icon { background-color: #e4efff !important; }
+  .cards article.amber .summary-card-icon { background-color: #fff2cf !important; }
+  .cards article.green .summary-card-icon { background-color: #e1f3e8 !important; }
+  .cards article.red .summary-card-icon { background-color: #f9e1e1 !important; }
+}
+
+/* FINAL PIXEL-CENTRED SUMMARY ICONS */
+.cards .summary-card-icon {
+  display: block !important;
+  position: absolute !important;
+  top: 26px !important;
+  right: 18px !important;
+  width: 42px !important;
+  height: 42px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  border-radius: 50% !important;
+}
+.cards .summary-card-icon svg {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 25px !important;
+  height: 25px !important;
+  margin: 0 !important;
+  display: block !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Bug Reports: same blue badge treatment as Notifications.
+   It is only shown by app.js when unread/new reports exist. */
+#settingsBugReports .bug-reports-badge {
+  position: static !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  min-width: 17px !important;
+  height: 17px !important;
+  padding: 0 4px !important;
+  margin: 0 0 0 8px !important;
+  border-radius: 999px !important;
+  background: #2f80ed !important;
+  color: #fff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 17px !important;
+  text-align: center !important;
+  border: 1px solid #fff !important;
+  font-variant-numeric: tabular-nums !important;
+}
+#settingsBugReports .bug-reports-badge[style*="display: none"] {
+  display: none !important;
+}
+#settingsBugReports .bug-reports-badge[style*="display: inline-flex"] {
+  display: inline-flex !important;
+}
+.changelog-list { display: grid; gap: 14px; }
+.changelog-entry { margin: 0 !important; }
+.changelog-version { display: flex; align-items: center; gap: 8px; }
+
+
+/* Data Management submenu */
+.settings-management-option { display:flex !important; align-items:center; justify-content:space-between; gap:8px; }
+.settings-management-item { width:100%; }
+
+
+/* Compact permit filter beside search */
+.search-filter-wrap { display:flex; align-items:center; gap:8px; position:relative; }
+.search-filter-wrap #search { min-width:0; }
+.permit-filter-wrap { position:relative; flex:0 0 auto; }
+.permit-filter-button { width:42px; height:38px; padding:8px !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; box-sizing:border-box !important; border:1px solid #cbd5df !important; border-radius:6px !important; background:#fff !important; }
+.permit-filter-button svg { width:20px; height:20px; fill:none; stroke:#2f80ed; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; display:block; }
+.permit-filter-button.active { background:#eaf2ff !important; border-color:#2f80ed !important; }
+.permit-filter-button.active svg { stroke:#2f80ed; }
+.permit-filter-menu { position:absolute; top:calc(100% + 8px); right:0; z-index:50; width:min(330px, calc(100vw - 32px)); padding:12px; background:#fff; border:1px solid #d9e2ea; border-radius:10px; box-shadow:0 12px 30px rgba(31,78,120,.16); box-sizing:border-box; }
+.permit-filter-menu[hidden] { display:none !important; }
+.permit-filter-menu-title { font-size:13px; font-weight:700; color:#1f2933; padding:4px 8px 8px; }
+.permit-filter-option { width:100%; display:flex; align-items:flex-start; gap:10px; padding:10px 8px !important; border:0 !important; border-radius:7px !important; background:#fff !important; text-align:left; }
+.permit-filter-option + .permit-filter-option { border-top:1px solid #edf1f4 !important; border-radius:0 !important; }
+.permit-filter-option:hover, .permit-filter-option.active { background:#f5f9ff !important; }
+.permit-filter-check { flex:0 0 16px; width:16px; height:16px; margin-top:2px; border:1.5px solid #9aa8b5; border-radius:3px; box-sizing:border-box; }
+.permit-filter-option.active .permit-filter-check { border-color:#2f80ed; background:#2f80ed; box-shadow:inset 0 0 0 3px #fff; }
+.permit-filter-option strong { display:block; color:#1f4e78; font-size:13px; line-height:1.3; }
+.permit-filter-option small { display:block; color:#68737d; font-size:11px; line-height:1.35; margin-top:2px; }
+@media (max-width:800px) { .search-filter-wrap { width:100%; } .search-filter-wrap #search { flex:1 1 auto; width:auto; } .permit-filter-button { width:42px; height:38px; flex:0 0 42px; } }
+
+/* Keep the Data Management unread badge blue and centered like Notifications. */
+#settingsDataManagement .bug-reports-badge {
+  position:static !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  vertical-align:middle !important;
+  box-sizing:border-box !important;
+  min-width:17px !important;
+  height:17px !important;
+  padding:0 4px !important;
+  margin:0 0 0 8px !important;
+  border-radius:999px !important;
+  background:#2f80ed !important;
+  color:#fff !important;
+  font-size:10px !important;
+  font-weight:700 !important;
+  line-height:17px !important;
+  text-align:center !important;
+  border:1px solid #fff !important;
+  font-variant-numeric:tabular-nums !important;
+}
+#settingsDataManagement .bug-reports-badge[style*="display: none"] { display:none !important; }
+#settingsDataManagement .bug-reports-badge[style*="display: inline-flex"] { display:inline-flex !important; }
+
+
+/* Clear Filter is a full-width action at the bottom of the filter menu. */
+.permit-filter-clear-button {
+  width: 100% !important;
+  display: block !important;
+  margin-top: 8px !important;
+  padding: 10px 12px !important;
+  border: 0 !important;
+  border-top: 1px solid #edf1f4 !important;
+  border-radius: 0 0 7px 7px !important;
+  background: #fff !important;
+  color: #1f4e78 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+}
+
+.permit-filter-clear-button:hover {
+  background: #f5f9ff !important;
+}
+
+/* Data Management keeps its unread badge beside the button text. */
+#settingsDataManagement {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+#dataManagementBadge,
+#dataManagementBugReportsBadge {
+  position: static !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}
+
+/* Remove the divider line directly beneath the Bug Reports title. */
+#dgslBugReportsDialog .header-dialog-head { border-bottom: 0 !important; }
+
+
+/* Status colour band at the left edge of each handover row.
+   The band is applied to the first cell so it stays exactly the
+   height of that row and remains visible on narrow phone screens. */
+tr.row-status-open td:first-child {
+  border-left: 6px solid #d99b24;
+}
+
+tr.row-status-closed td:first-child {
+  border-left: 6px solid #3b8f5a;
+}
+
+tr.row-status-hold td:first-child {
+  border-left: 6px solid #c84b4b;
 }
