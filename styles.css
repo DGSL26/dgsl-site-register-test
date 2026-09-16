@@ -1880,3 +1880,38 @@ body.change-log-open {
 
 /* Remove the divider line directly beneath the Bug Reports title. */
 #dgslBugReportsDialog .header-dialog-head { border-bottom: 0 !important; }
+
+/* Phone only: balance the header so the logo and site title each use half the row. */
+@media (max-width: 600px) {
+  header > div:first-child {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 10px !important;
+    overflow: visible !important;
+  }
+
+  header > div:first-child > img {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    object-fit: contain !important;
+  }
+
+  header > div:first-child > div {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  header > div:first-child h1 {
+    font-size: 26px !important;
+    line-height: 1.08 !important;
+  }
+
+  header > div:first-child .eyebrow {
+    font-size: 12px !important;
+  }
+}
