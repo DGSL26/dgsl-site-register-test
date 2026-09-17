@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DGSL Site Register — Sites</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#17212b}.wrap{max-width:1100px;margin:0 auto;padding:28px 20px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:14px}.brand img{width:52px;height:52px;object-fit:contain}.brand h1{margin:0;font-size:25px}.brand p{margin:4px 0 0;color:#68737d}.login{background:#008e39;color:#fff;border:0;border-radius:7px;padding:10px 16px;font-weight:700;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px}.card{background:#fff;border:1px solid #dfe4e8;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.05)}.card h2{margin:0 0 7px;font-size:20px}.meta{color:#68737d;font-size:14px;line-height:1.55}.status{display:inline-block;margin-top:13px;padding:5px 9px;border-radius:999px;background:#e7f6ed;color:#16733b;font-size:12px;font-weight:700}.open{display:block;text-align:center;text-decoration:none;background:#008e39;color:#fff;padding:11px;border-radius:7px;margin-top:18px;font-weight:700}.note{margin:25px 0 0;color:#68737d;font-size:13px}.add{border:2px dashed #c9d0d6;box-shadow:none;background:transparent;display:flex;align-items:center;justify-content:center;min-height:205px;color:#68737d;font-weight:700}.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.box{background:#fff;border-radius:12px;padding:22px;max-width:380px;width:100%}.box h2{margin-top:0}.box input{width:100%;padding:11px;border:1px solid #ccd3d8;border-radius:6px;margin:8px 0 12px}.actions{display:flex;justify-content:flex-end;gap:10px}.cancel{background:#fff;border:1px solid #ccd3d8;border-radius:6px;padding:10px 14px;cursor:pointer}.error{color:#b42318;font-size:13px;min-height:18px;margin-bottom:8px}@media(max-width:600px){.top{align-items:flex-start}.brand h1{font-size:21px}.login{padding:9px 12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><img src="dgsl-logo.png" alt="DGSL"><div><h1>DGSL Site Register</h1><p>Site dashboard — TEST environment</p></div></div>
+    <button class="login" id="loginBtn">Login</button>
+  </header>
+  <main>
+    <div class="grid">
+      <section class="card">
+        <h2>Knocksedan, PH3</h2>
+        <div class="meta">Site ID: SWORDS<br>Current TEST application</div>
+        <span class="status">ACTIVE</span>
+        <a class="open" href="./">Open Swords TEST</a>
+      </section>
+      <section class="card">
+        <h2>Site 2</h2>
+        <div class="meta">Site ID: SITE2<br>Separate TEST handovers and photos</div>
+        <span class="status">ACTIVE</span>
+        <a class="open" href="./?site=SITE2">Open Site 2 TEST</a>
+      </section>
+      <section class="card add">Future site<br>— add when required —</section>
+    </div>
+    <p class="note">All sites use the same application code. Site data and photo storage remain separated by site. When the application is updated, the same code can be deployed to every site.</p>
+  </main>
+</div>
+<div class="modal" id="modal"><div class="box">
+  <h2>DGSL Login</h2>
+  <div class="error" id="error"></div>
+  <label>Password</label><input id="password" type="password" autocomplete="current-password">
+  <div class="actions"><button class="cancel" id="cancel">Cancel</button><button class="login" id="submit">Login</button></div>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://mgxbsxqgjxpdvdjsixqi.supabase.co';
+const SUPABASE_KEY='sb_publishable_XWLtSyttiEMQA86unKN37A_ZC9OY19j';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const modal=document.getElementById('modal'),password=document.getElementById('password'),error=document.getElementById('error'),loginBtn=document.getElementById('loginBtn');
+async function update(){const {data}=await supabaseClient.auth.getSession(); loginBtn.textContent=data.session?'Open account':'Login';}
+loginBtn.onclick=async()=>{const {data}=await supabaseClient.auth.getSession(); if(data.session){window.location.href='./';return;} modal.classList.add('show');password.focus()};
+document.getElementById('cancel').onclick=()=>modal.classList.remove('show');
+document.getElementById('submit').onclick=async()=>{error.textContent='';const p=password.value;if(!p){error.textContent='Please enter your password.';return;}const {error:e}=await supabaseClient.auth.signInWithPassword({email:'elvira@dgsl.ie',password:p});if(e){error.textContent=e.message;return;}modal.classList.remove('show');update()};
+password.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('submit').click()});update();
+</script>
+</body>
+</html>
