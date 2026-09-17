@@ -22,7 +22,7 @@ const SITE_VERSION = '1.4.0';
 const SITE_CONFIGS = {
   SWORDS: {
     id: 'SWORDS',
-    name: SITE_CONFIG.name,
+    name: 'Knocksedan, PH3',
     shortName: 'DGSL BUILDING',
     address: SITE_CONFIG.name,
     handoversTable: 'handovers_test',
