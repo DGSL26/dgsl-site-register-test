@@ -13,18 +13,16 @@ const SUPABASE_KEY =
 const LOGO_FILE =
   'dgsl-logo.png';
 
-let supabaseClient = null;
-let records = [];
-let editing = null;
-let filter = 'All';
-
-const SITE_VERSION = '1.4.0';
+// ------------------------------------------------------------
+// MULTI-SITE CONFIGURATION
+// The same application can serve multiple sites. The current
+// site is selected by ?site=SITE2. With no parameter, SWORDS
+// remains the default so the existing TEST URL keeps working.
+// ------------------------------------------------------------
 const SITE_CONFIGS = {
   SWORDS: {
-    id: 'SWORDS',
-    name: 'Knocksedan, PH3',
-    shortName: 'DGSL BUILDING',
-    address: 'Knocksedan, Swords, Co. Dublin',
+    code: 'SWORDS',
+    name: SITE_CONFIG.name,
     handoversTable: 'handovers_test',
     bugReportsTable: 'bug_reports_test',
     notificationsTable: 'site_notifications_test',
@@ -32,10 +30,8 @@ const SITE_CONFIGS = {
     photoBucket: 'handover-photos-test'
   },
   SITE2: {
-    id: 'SITE2',
+    code: 'SITE2',
     name: 'Site 2',
-    shortName: 'DGSL BUILDING',
-    address: 'Site 2',
     handoversTable: 'handovers_site2_test',
     bugReportsTable: 'bug_reports_site2_test',
     notificationsTable: 'site_notifications_site2_test',
@@ -44,37 +40,27 @@ const SITE_CONFIGS = {
   }
 };
 
-// One codebase serves every site. The hostname selects the site's isolated
-// database tables and storage bucket. The current TEST site defaults to SWORDS.
-const SITE_HOST_MAP = {
-  // Add each site's real hostname here when that site is created.
-  // 'site2.example.com': 'SITE2'
-};
-
-const siteFromUrl = new URLSearchParams(window.location.search).get('site');
-const SITE_ID = SITE_CONFIGS[siteFromUrl?.toUpperCase()]
-  ? siteFromUrl.toUpperCase()
-  : (SITE_HOST_MAP[window.location.hostname] || 'SWORDS');
-const SITE_CONFIG = SITE_CONFIGS[SITE_ID] || SITE_CONFIGS.SWORDS;
-
-const PHOTO_BUCKET = SITE_CONFIG.photoBucket;
-const NOTIFICATIONS_TABLE = SITE_CONFIG.notificationsTable;
-const NOTIFICATION_DEVICE_READS_TABLE = SITE_CONFIG.notificationReadsTable;
-const HANDOVERS_TABLE = SITE_CONFIG.handoversTable;
-const BUG_REPORTS_TABLE = SITE_CONFIG.bugReportsTable;
-
-function applySiteConfig() {
-  document.querySelectorAll('[data-site-name]').forEach(element => {
-    element.textContent = SITE_CONFIG.name;
-  });
-  document.querySelectorAll('[data-site-short-name]').forEach(element => {
-    element.textContent = SITE_CONFIG.shortName;
-  });
-  document.title = `DGSL Site Register — ${SITE_CONFIG.name}`;
+function getRequestedSiteCode() {
+  try {
+    const value = new URLSearchParams(window.location.search).get('site');
+    const code = String(value || 'SWORDS').trim().toUpperCase();
+    return SITE_CONFIGS[code] ? code : 'SWORDS';
+  } catch (_) {
+    return 'SWORDS';
+  }
 }
 
-applySiteConfig();
-document.addEventListener('DOMContentLoaded', applySiteConfig);
+const CURRENT_SITE_CODE = getRequestedSiteCode();
+const SITE_CONFIG = SITE_CONFIGS[CURRENT_SITE_CODE];
+const PHOTO_BUCKET = SITE_CONFIG.photoBucket;
+
+let supabaseClient = null;
+let records = [];
+let editing = null;
+let filter = 'All';
+
+const SITE_VERSION = '1.3.3';
+const NOTIFICATIONS_TABLE = SITE_CONFIG.notificationsTable;
 
 // Single source of truth for the website version.
 function applySiteVersion() {
@@ -281,7 +267,7 @@ function openDataManagementDialog() {
           if (!Array.isArray(imported)) throw new Error('Invalid backup');
           for (const record of imported) {
             const databaseRecord = toDatabase(record);
-            const { error } = await supabaseClient.from(HANDOVERS_TABLE).upsert(databaseRecord);
+            const { error } = await supabaseClient.from(SITE_CONFIG.handoversTable).upsert(databaseRecord);
             if (error) throw error;
           }
           await loadRecords();
@@ -301,6 +287,7 @@ function openDataManagementDialog() {
   refreshBugReportsBadge();
 }
 
+const BUG_REPORTS_TABLE = SITE_CONFIG.bugReportsTable;
 
 function isBugReportAdmin() {
   // Bug Reports are available to any logged-in user.
@@ -677,6 +664,7 @@ async function openBugReportsDialog() {
   }
 }
 
+const NOTIFICATION_DEVICE_READS_TABLE = SITE_CONFIG.notificationReadsTable;
 
 function getNotificationDeviceKey() {
   const values = [
@@ -1334,7 +1322,7 @@ async function loadRecords() {
       error
     } =
       await supabaseClient
-        .from(HANDOVERS_TABLE)
+        .from(SITE_CONFIG.handoversTable)
         .select('*');
 
     if (error) {
@@ -1397,13 +1385,13 @@ async function setupRealtime() {
   }
 
   handoversRealtimeChannel = supabaseClient
-    .channel('handovers-test-live')
+    .channel(`handovers-${CURRENT_SITE_CODE.toLowerCase()}-test-live`)
     .on(
       'postgres_changes',
       {
         event: '*',
         schema: 'public',
-        table: HANDOVERS_TABLE
+        table: SITE_CONFIG.handoversTable
       },
       async () => {
         await loadRecords();
@@ -1412,7 +1400,7 @@ async function setupRealtime() {
 
   handoversRealtimeChannel.subscribe((status) => {
     if (status === 'SUBSCRIBED') {
-      console.log(`Supabase realtime connected: ${HANDOVERS_TABLE}`);
+      console.log(`Supabase realtime connected: ${SITE_CONFIG.handoversTable}`);
     } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
       console.warn('Supabase realtime status:', status);
     }
@@ -2186,7 +2174,7 @@ function showRowMoreDialog(record) {
           }
         }
         const { error } = await supabaseClient
-          .from(HANDOVERS_TABLE)
+          .from(SITE_CONFIG.handoversTable)
           .delete()
           .eq('id', record.id);
         if (error) throw error;
@@ -3279,7 +3267,7 @@ for (
           error
         } =
           await supabaseClient
-            .from(HANDOVERS_TABLE)
+            .from(SITE_CONFIG.handoversTable)
             .update(
               databaseRecord
             )
@@ -3299,7 +3287,7 @@ for (
           error
         } =
           await supabaseClient
-            .from(HANDOVERS_TABLE)
+            .from(SITE_CONFIG.handoversTable)
             .insert(
               databaseRecord
             );
@@ -3528,7 +3516,7 @@ async function copyHandover(record) {
 
     const { error } =
       await supabaseClient
-        .from(HANDOVERS_TABLE)
+        .from(SITE_CONFIG.handoversTable)
         .insert(databaseRecord);
 
     if (error) {
@@ -3973,7 +3961,7 @@ $('#delete').onclick =
         error
       } =
         await supabaseClient
-          .from(HANDOVERS_TABLE)
+          .from(SITE_CONFIG.handoversTable)
           .delete()
           .eq(
             'id',
