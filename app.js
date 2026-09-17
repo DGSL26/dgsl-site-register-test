@@ -51,7 +51,10 @@ const SITE_HOST_MAP = {
   // 'site2.example.com': 'SITE2'
 };
 
-const SITE_ID = SITE_HOST_MAP[window.location.hostname] || 'SWORDS';
+const siteFromUrl = new URLSearchParams(window.location.search).get('site');
+const SITE_ID = SITE_CONFIGS[siteFromUrl?.toUpperCase()]
+  ? siteFromUrl.toUpperCase()
+  : (SITE_HOST_MAP[window.location.hostname] || 'SWORDS');
 const SITE_CONFIG = SITE_CONFIGS[SITE_ID] || SITE_CONFIGS.SWORDS;
 
 const PHOTO_BUCKET = SITE_CONFIG.photoBucket;
@@ -1409,7 +1412,7 @@ async function setupRealtime() {
 
   handoversRealtimeChannel.subscribe((status) => {
     if (status === 'SUBSCRIBED') {
-      console.log('Supabase realtime connected: handovers_test');
+      console.log(`Supabase realtime connected: ${HANDOVERS_TABLE}`);
     } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
       console.warn('Supabase realtime status:', status);
     }
