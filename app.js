@@ -21,9 +21,8 @@ let records = [];
 let editing = null;
 let filter = 'All';
 
-const SITE_VERSION = '1.2.8';
+const SITE_VERSION = '1.3.3';
 const NOTIFICATIONS_TABLE = 'site_notifications_test';
-const NOTIFICATIONS_SEEN_KEY = 'dgsl_site_register_test_notifications_seen_v1';
 
 // Single source of truth for the website version.
 function applySiteVersion() {
@@ -627,30 +626,73 @@ async function openBugReportsDialog() {
   }
 }
 
-function getSeenNotificationIds() {
+const NOTIFICATION_DEVICE_READS_TABLE = 'site_notification_device_reads_test';
+
+function getNotificationDeviceKey() {
+  const values = [
+    navigator.userAgent || '',
+    navigator.platform || '',
+    navigator.language || '',
+    navigator.languages ? navigator.languages.join(',') : '',
+    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+    String(screen.width || ''),
+    String(screen.height || ''),
+    String(screen.colorDepth || ''),
+    String(window.devicePixelRatio || ''),
+    String(navigator.hardwareConcurrency || ''),
+    String(navigator.maxTouchPoints || ''),
+    String(navigator.deviceMemory || '')
+  ];
+
+  return values.join('|');
+}
+
+async function getSeenNotificationIds() {
+  if (!supabaseClient || !currentUser) return [];
+
   try {
-    const value = localStorage.getItem(NOTIFICATIONS_SEEN_KEY);
-    const parsed = value ? JSON.parse(value) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (_) {
+    const deviceKey = getNotificationDeviceKey();
+    const { data, error } = await supabaseClient
+      .from(NOTIFICATION_DEVICE_READS_TABLE)
+      .select('notification_id')
+      .eq('user_id', currentUser.id)
+      .eq('device_key', deviceKey);
+
+    if (error) throw error;
+
+    return Array.isArray(data)
+      ? data.map(row => String(row.notification_id))
+      : [];
+  } catch (error) {
+    console.warn('Notification read state could not be loaded:', error);
     return [];
   }
 }
 
-function setSeenNotificationIds(ids) {
-  try {
-    localStorage.setItem(
-      NOTIFICATIONS_SEEN_KEY,
-      JSON.stringify(Array.from(new Set(ids)).slice(-100))
-    );
-  } catch (_) {}
-}
+async function markNotificationsSeen(notifications) {
+  if (!supabaseClient || !currentUser || !notifications.length) return;
 
-function markNotificationsSeen(notifications) {
-  const seen = getSeenNotificationIds();
-  const ids = notifications.map(n => String(n.id));
-  setSeenNotificationIds([...seen, ...ids]);
-  updateNotificationBadge(0);
+  try {
+    const deviceKey = getNotificationDeviceKey();
+    const rows = notifications.map(notification => ({
+      user_id: currentUser.id,
+      device_key: deviceKey,
+      notification_id: String(notification.id)
+    }));
+
+    const { error } = await supabaseClient
+      .from(NOTIFICATION_DEVICE_READS_TABLE)
+      .upsert(rows, {
+        onConflict: 'user_id,device_key,notification_id',
+        ignoreDuplicates: true
+      });
+
+    if (error) throw error;
+
+    updateNotificationBadge(0);
+  } catch (error) {
+    console.warn('Notification read state could not be saved:', error);
+  }
 }
 
 function notificationMessageHtml(notification) {
@@ -683,7 +725,7 @@ async function loadSiteNotifications() {
     if (error) throw error;
 
     const notifications = Array.isArray(data) ? data : [];
-    const seen = new Set(getSeenNotificationIds());
+    const seen = new Set(await getSeenNotificationIds());
     const unseen = notifications.filter(n => !seen.has(String(n.id)));
     updateNotificationBadge(unseen.length);
     return unseen;
@@ -730,9 +772,9 @@ async function openNotificationsDialog() {
   }
 
   content.innerHTML = notifications.map(notificationMessageHtml).join('');
-  content.querySelectorAll('.site-notification-refresh').forEach(button => {
-    button.addEventListener('click', () => {
-      markNotificationsSeen(notifications);
+  content.querySelectorAll('.site-notification-refresh').forEach((button, index) => {
+    button.addEventListener('click', async () => {
+      await markNotificationsSeen([notifications[index]]);
       dialog.close();
       const url = new URL(window.location.href);
       url.searchParams.set('refresh', String(Date.now()));
@@ -1087,6 +1129,9 @@ let photosToRemove = [];
     handoverDate:
       x.handover_date || '',
 
+    createdAt:
+      x.created_at || '',
+
     takeBackDate:
       x.take_back_date || '',
     
@@ -1122,6 +1167,12 @@ let photosToRemove = [];
 
     takeBackSnagCompleted:
       x.take_back_snag_completed || '',
+
+    firstFixRecordsStatus:
+      takeBackChecklist.firstFixRecordsStatus || '',
+
+    firstFixRecordsLocation:
+      takeBackChecklist.firstFixRecordsLocation || '',
 
     takeBackChecklist:
       takeBackChecklist
@@ -1483,9 +1534,34 @@ function render() {
             .includes(q);
       })
       .sort((a, b) => {
-        const aDate = String(a.handoverDate || '');
-        const bDate = String(b.handoverDate || '');
-        return bDate.localeCompare(aDate);
+        // The main register is always ordered by Handover Date.
+        // The Closed KPI/filter uses Take Back Date, while the On Hold
+        // KPI/filter uses Take Back Date when available and Handover Date
+        // when there is no Take Back Date.
+        const getSortDate = record => {
+          if (filter === 'Work Permit Closed') {
+            return record.takeBackDate;
+          }
+          if (filter === 'Work Permit on Hold') {
+            return record.takeBackDate || record.handoverDate;
+          }
+          return record.handoverDate;
+        };
+
+        const aDate = String(getSortDate(a) || '');
+        const bDate = String(getSortDate(b) || '');
+
+        if (aDate !== bDate) {
+          if (!aDate) return 1;
+          if (!bDate) return -1;
+          return bDate.localeCompare(aDate);
+        }
+
+        // There is no separate handover-time field, so for handovers on the
+        // same date use the database creation timestamp as the time order.
+        const aTime = Date.parse(a.createdAt || '') || 0;
+        const bTime = Date.parse(b.createdAt || '') || 0;
+        return bTime - aTime;
       });
 
 
@@ -1531,15 +1607,19 @@ function render() {
 
   updateWeekChange(
     'closedWeek',
-    thisWeek.filter(
-      x => x.status === 'Work Permit Closed'
+    records.filter(
+      x =>
+        x.status === 'Work Permit Closed' &&
+        isThisWeek(x.takeBackDate)
     ).length
   );
 
   updateWeekChange(
     'holdWeek',
-    thisWeek.filter(
-      x => x.status === 'Work Permit on Hold'
+    records.filter(
+      x =>
+        x.status === 'Work Permit on Hold' &&
+        isThisWeek(x.takeBackDate || x.handoverDate)
     ).length
   );
 
@@ -2124,6 +2204,33 @@ async function sharePdfToDevice(record) {
 // CHECKLIST
 // ============================================================
 
+function isFirstFixWorkDescription(value) {
+
+  return /(?:\b1\s*st\b|\bfirst\b)[\s\u00a0\-\u2010\u2011\u2012\u2013\u2014_\/\\.,:;()]*fix\b/i.test(
+    String(value || '')
+  );
+
+}
+
+function updateFirstFixFieldsVisibility() {
+
+  const fields =
+    document.getElementById('firstFixFields');
+
+  const description =
+    form.elements.description?.value || '';
+
+  if (!fields) {
+    return;
+  }
+
+  fields.classList.toggle(
+    'hidden',
+    !isFirstFixWorkDescription(description)
+  );
+
+}
+
 function getTakeBackChecklist() {
 
   const result = {};
@@ -2151,6 +2258,18 @@ function getTakeBackChecklist() {
 
       }
     );
+
+  if (isFirstFixWorkDescription(form.elements.description?.value || '')) {
+
+    result.firstFixRecordsStatus =
+      form.elements.firstFixRecordsStatus?.value === 'Other'
+        ? form.elements.firstFixRecordsStatusOther?.value || ''
+        : form.elements.firstFixRecordsStatus?.value || '';
+
+    result.firstFixRecordsLocation =
+      form.elements.firstFixRecordsLocation?.value || '';
+
+  }
 
   return result;
 
@@ -2449,6 +2568,63 @@ setupOtherDropdown(
   'takeBackSnagCompletedOther'
 );
 
+function setupFirstFixStatusOther() {
+  const select = form.elements.firstFixRecordsStatus;
+  const other = document.getElementById('firstFixRecordsStatusOther');
+  if (!select || !other) return;
+
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'relative';
+  wrapper.style.width = '100%';
+
+  select.parentNode.insertBefore(wrapper, select);
+  wrapper.appendChild(select);
+  wrapper.appendChild(other);
+
+  select.style.width = '100%';
+  select.style.boxSizing = 'border-box';
+
+  other.style.display = 'none';
+  other.disabled = true;
+
+  const sync = () => {
+    if (select.value === 'Other') {
+      // Keep the dropdown and its arrow available so the user can change their mind.
+      other.style.display = '';
+      other.disabled = false;
+      other.style.position = 'absolute';
+      other.style.left = '0';
+      other.style.top = '6px';
+      other.style.width = 'calc(100% - 45px)';
+      other.style.height = 'calc(100% - 6px)';
+      other.style.boxSizing = 'border-box';
+      other.style.margin = '0';
+      other.style.zIndex = '2';
+      other.focus();
+    } else {
+      other.style.display = 'none';
+      other.disabled = true;
+      other.value = '';
+      other.style.position = '';
+      other.style.width = '';
+      other.style.height = '';
+      other.style.zIndex = '';
+    }
+  };
+
+  select.addEventListener('change', sync);
+  sync();
+}
+
+setupFirstFixStatusOther();
+
+if (form.elements.description) {
+  form.elements.description.addEventListener(
+    'input',
+    updateFirstFixFieldsVisibility
+  );
+}
+
 // Automatically close the work permit when the DGSL representative
 // field is filled in. The status dropdown remains editable afterwards.
 const dgslRepresentativeField = form.elements.dgslSigner;
@@ -2665,7 +2841,32 @@ otherField.style.display =
   }
 
 
+  updateFirstFixFieldsVisibility();
+
+
   if (x) {
+
+    const checklist =
+      x.takeBackChecklist || {};
+
+    if (form.elements.firstFixRecordsStatus) {
+      const savedFirstFixStatus = checklist.firstFixRecordsStatus || 'To be completed';
+      const standardFirstFixStatuses = ['To be completed', 'Yes', 'No', 'Outstanding', 'Other'];
+      if (standardFirstFixStatuses.includes(savedFirstFixStatus)) {
+        form.elements.firstFixRecordsStatus.value = savedFirstFixStatus;
+      } else {
+        form.elements.firstFixRecordsStatus.value = 'Other';
+        if (form.elements.firstFixRecordsStatusOther) {
+          form.elements.firstFixRecordsStatusOther.value = savedFirstFixStatus;
+        }
+      }
+      form.elements.firstFixRecordsStatus.dispatchEvent(new Event('change'));
+    }
+
+    if (form.elements.firstFixRecordsLocation) {
+      form.elements.firstFixRecordsLocation.value =
+        checklist.firstFixRecordsLocation || '';
+    }
 
     drawSavedSignature(
       $('#contractorSignature'),
@@ -3855,6 +4056,18 @@ document
 $('#search').oninput =
   render;
 
+const searchClearButton = document.getElementById('searchClear');
+if (searchClearButton) {
+  searchClearButton.onclick = () => {
+    const search = document.getElementById('search');
+    if (search) {
+      search.value = '';
+      search.dispatchEvent(new Event('input', { bubbles: true }));
+      search.focus();
+    }
+  };
+}
+
 function setupRegisterFilter() {
   const button = document.getElementById('permitFilterButton');
   const menu = document.getElementById('permitFilterMenu');
@@ -4503,6 +4716,12 @@ healthSafetyScaffolding:
   form.elements.takeBackSnagCompleted?.value === 'Other'
     ? document.getElementById('takeBackSnagCompletedOther').value || 'Other'
     : form.elements.takeBackSnagCompleted?.value || '',
+  firstFixRecordsStatus:
+    form.elements.firstFixRecordsStatus?.value === 'Other'
+      ? form.elements.firstFixRecordsStatusOther?.value || ''
+      : form.elements.firstFixRecordsStatus?.value || '',
+  firstFixRecordsLocation:
+    form.elements.firstFixRecordsLocation?.value || '',
   notes: form.elements.notes?.value || '',
   contractorSigner:
     form.elements.contractorSigner?.value || '',
@@ -4705,7 +4924,7 @@ healthSafetyScaffolding:
 
 
     addField(
-      'Housekeeping at time of Take Over',
+      'Housekeeping at time of Handover',
       data.trade
     );
 
@@ -5017,6 +5236,18 @@ healthSafetyScaffolding:
       'DG to Snag completed works',
       data.takeBackSnagCompleted
     );
+
+    if (isFirstFixWorkDescription(data.description)) {
+      addField(
+        'Video/photographic records of First-Fix complete and submitted',
+        data.firstFixRecordsStatus
+      );
+
+      addField(
+        'First-Fix Records: Location/Recipient',
+        data.firstFixRecordsLocation
+      );
+    }
 
     // --------------------------------------------------------
     // NOTES
@@ -5663,6 +5894,19 @@ document.addEventListener(
 // ============================================================
 // PDF VIEWER CLOSE
 // ============================================================
+
+$('#downloadPdf').onclick =
+  async () => {
+
+    try {
+      await generatePdf(false);
+    } catch (error) {
+      console.error('PDF download error:', error);
+      alert('Unable to download the PDF.');
+    }
+
+  };
+
 
 $('#closePdf').onclick =
   () => {

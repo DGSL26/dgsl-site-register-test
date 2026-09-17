@@ -10,7 +10,6 @@
 
 <body>
   <div style="background:#b91c1c;color:#fff;text-align:center;font-weight:700;padding:8px;">DGSL SITE REGISTER — TEST VERSION</div>
-
 <header>
 
   <div style="display:flex;align-items:center;gap:15px;min-width:0;">
@@ -108,7 +107,10 @@
     <div class="actions">
 
       <div class="search-filter-wrap">
-        <input id="search" type="search" placeholder="Search zones, contractor..." aria-label="Search register">
+        <div class="search-clear-wrap">
+          <input id="search" type="search" placeholder="Search zones, contractor..." aria-label="Search register">
+          <button type="button" id="searchClear" class="search-clear-button" aria-label="Clear search" title="Clear search">×</button>
+        </div>
         <div class="permit-filter-wrap">
           <button type="button" id="permitFilterButton" class="permit-filter-button" aria-label="Filter work permits" aria-haspopup="true" aria-expanded="false" title="Filter work permits">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.5 8v5l-3 1v-6z"></path></svg>
@@ -166,11 +168,56 @@
     <div class="changelog-header">
       <div class="changelog-kicker">DGSL SITE REGISTER</div>
       <h2 id="changeLogTitle">Change Log</h2>
-      <p>A simple overview of the main improvements made to the site.</p>
+      <p>A simple overview of the main improvements made to the site register.</p>
     </div>
     <div class="changelog-list">
       <section class="changelog-entry current">
-        <div class="changelog-version">1.2.8 <span class="changelog-current">Current</span></div>
+        <div class="changelog-version">1.3.3 <span class="changelog-current">Current</span></div>
+        <ul>
+          <li>Updated the weekly Work Permit KPI calculations so Closed is based on Take Back Date, On Hold uses Take Back Date when available and otherwise Handover Date, while Open remains based on Handover Date.</li>
+        </ul>
+      </section>
+
+      <section class="changelog-entry">
+        <div class="changelog-version">1.3.2</div>
+        <ul>
+          <li>Removed the Generate PDF button from the New Handover window. PDF generation remains available through the View PDF window's Download button.</li>
+        </ul>
+      </section>
+
+      <section class="changelog-entry">
+        <div class="changelog-version">1.3.1</div>
+        <ul>
+          <li>Added the First-Fix completion records section to the Take Back area, shown only when the work description is recognised as First-Fix work.</li>
+          <li>Added a dedicated First-Fix records status with the options To be completed, Yes, No, Outstanding and Other.</li>
+          <li>Added a custom answer field for the First-Fix status when Other is selected, with the custom value saved and restored when a handover is edited.</li>
+          <li>Changed the First-Fix status handling so existing saved values are preserved, including older/custom values that do not match the standard status options.</li>
+          <li>Added an X control inside the Work Permit search field so the current search can be cleared quickly without manually deleting the text.</li>
+          <li>Added a Download icon to the View PDF window so the displayed PDF can be downloaded directly while the X control remains dedicated to closing the window.</li>
+          <li>Refined the LIVE website notification workflow so version changes are detected generally rather than being tied to a single release version.</li>
+          <li>Updated the LIVE notification workflow so a new website version replaces the previous LIVE website-update notification instead of leaving older notifications in place.</li>
+          <li>Improved the LIVE notification workflow with explicit secret validation, HTTP/1.1 handling and retry behaviour, and support for manual workflow runs using the current website version.</li>
+        </ul>
+      </section>
+
+      <section class="changelog-entry">
+        <div class="changelog-version">1.3.0</div>
+        <ul>
+          <li>Added Settings &gt; Data Management as a dedicated management view containing Bug Reports, Export Data and Import Data.</li>
+          <li>Added unread Bug Report indicators to Data Management and refined the unread badge so it only appears when unread reports exist.</li>
+          <li>Added the Work Permit filter control with Open/On Hold, Open Longer Than 1 Week and Clear Filter options.</li>
+          <li>Made the Work Permit summary cards act as the status filters, with a clear selected state.</li>
+          <li>Added Delete to the handover row More actions while keeping the row interaction workflow intact.</li>
+          <li>Added Share and More actions to the logged-out handover view, including Download PDF and Share.</li>
+          <li>Added individual rounded status bands to every handover row, matching the KPI card band thickness and colours: amber for Open, green for Closed and red for On Hold.</li>
+          <li>Refined the phone header presentation so the logo and site title use the available space more effectively without changing the tablet or computer layout.</li>
+          <li>Improved realtime connection handling so the register can recover cleanly from reused desktop/browser realtime channels.</li>
+          <li>Finalised the LIVE website update notification flow for version 1.3.0.</li>
+        </ul>
+      </section>
+
+      <section class="changelog-entry">
+        <div class="changelog-version">1.2.8</div>
         <ul>
           <li>Added live Supabase updates so saved handover changes appear across connected devices without a manual refresh.</li>
           <li>Added live updates for Bug Reports and website notifications, plus a short fallback refresh while the site is open.</li>
@@ -209,7 +256,7 @@
       <section class="changelog-entry">
         <div class="changelog-version">1.2.5</div>
         <ul>
-          <li>Refined the signed-in experience and editing controls for the TEST site.</li>
+          <li>Refined the signed-in experience and editing controls for the site.</li>
           <li>Improved login, logout and edit visibility behaviour across the register.</li>
           <li>Continued improvements to the handover form and responsive layout.</li>
           <li>Refined PDF generation and viewing, including records containing multiple photos.</li>
@@ -241,7 +288,7 @@
       <section class="changelog-entry">
         <div class="changelog-version">1.2.2</div>
         <ul>
-          <li>Continued development of the shared TEST Site Register and its Supabase-backed handover data.</li>
+          <li>Continued development of the shared Site Register and its Supabase-backed handover data.</li>
           <li>Refined mobile layout and restored the intended register behaviour on smaller screens.</li>
           <li>Improved handover photo viewing, sorting and copying workflows.</li>
           <li>Continued improvements to signatures, PDFs and the Take Back information.</li>
@@ -301,14 +348,30 @@
         <h2>View PDF</h2>
       </div>
 
-      <button
-        type="button"
-        id="closePdf"
-        class="icon"
-        aria-label="Close"
-      >
-        ×
-      </button>
+      <div class="pdf-header-actions">
+
+        <button
+          type="button"
+          id="downloadPdf"
+          class="pdf-download-button"
+          aria-label="Download PDF"
+          title="Download PDF"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 3v11m0 0 4-4m-4 4-4-4M5 18v2h14v-2" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          id="closePdf"
+          class="icon"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+      </div>
 
     </div>
 
@@ -467,7 +530,7 @@
 
     <label>
 
-  Housekeeping at time of Take Over
+  Housekeeping at time of Handover
 
   <select
     name="trade"
@@ -930,6 +993,54 @@
 
 </label>
 
+<div id="firstFixFields" class="wide first-fix-fields hidden">
+
+  <label>
+
+    Video/photographic records of First-Fix complete and submitted
+
+    <select name="firstFixRecordsStatus">
+      <option value="To be completed" selected>
+        To be completed
+      </option>
+      <option value="Yes">
+        Yes
+      </option>
+      <option value="No">
+        No
+      </option>
+      <option value="Outstanding">
+        Outstanding
+      </option>
+      <option value="Other">
+        Other
+      </option>
+    </select>
+
+    <input
+      type="text"
+      id="firstFixRecordsStatusOther"
+      name="firstFixRecordsStatusOther"
+      placeholder="Enter your own answer"
+      style="display:none;margin-top:6px;"
+    >
+
+  </label>
+
+  <label>
+
+    First-Fix Records: Location/Recipient
+
+    <input
+      type="text"
+      name="firstFixRecordsLocation"
+      placeholder="Enter storage location or name of person sent to"
+    >
+
+  </label>
+
+</div>
+
     <!-- NOTES -->
 
     <label class="wide">
@@ -1072,14 +1183,6 @@
       id="cancel2"
     >
       Cancel
-    </button>
-
-    <button
-      type="button"
-      id="generatePdf"
-      class="primary"
-    >
-      Generate PDF
     </button>
 
     <button
