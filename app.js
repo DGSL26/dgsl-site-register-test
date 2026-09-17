@@ -10,6 +10,9 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   'sb_publishable_XWLtSyttiEMQA86unKN37A_ZC9OY19j';
 
+const PHOTO_BUCKET =
+  'handover-photos-test';
+
 const LOGO_FILE =
   'dgsl-logo.png';
 
@@ -18,60 +21,8 @@ let records = [];
 let editing = null;
 let filter = 'All';
 
-const SITE_VERSION = '1.4.0';
-const SITE_CONFIGS = {
-  SWORDS: {
-    id: 'SWORDS',
-    name: 'Knocksedan, PH3',
-    shortName: 'DGSL BUILDING',
-    address: SITE_CONFIG.name,
-    handoversTable: 'handovers_test',
-    bugReportsTable: 'bug_reports_test',
-    notificationsTable: 'site_notifications_test',
-    notificationReadsTable: 'site_notification_device_reads_test',
-    photoBucket: 'handover-photos-test'
-  },
-  SITE2: {
-    id: 'SITE2',
-    name: 'Site 2',
-    shortName: 'DGSL BUILDING',
-    address: 'Site 2',
-    handoversTable: 'handovers_site2_test',
-    bugReportsTable: 'bug_reports_site2_test',
-    notificationsTable: 'site_notifications_site2_test',
-    notificationReadsTable: 'site_notification_device_reads_site2_test',
-    photoBucket: 'handover-photos-site2-test'
-  }
-};
-
-// One codebase serves every site. The hostname selects the site's isolated
-// database tables and storage bucket. The current TEST site defaults to SWORDS.
-const SITE_HOST_MAP = {
-  // Add each site's real hostname here when that site is created.
-  // 'site2.example.com': 'SITE2'
-};
-
-const SITE_ID = SITE_HOST_MAP[window.location.hostname] || 'SWORDS';
-const SITE_CONFIG = SITE_CONFIGS[SITE_ID] || SITE_CONFIGS.SWORDS;
-
-const PHOTO_BUCKET = SITE_CONFIG.photoBucket;
-const NOTIFICATIONS_TABLE = SITE_CONFIG.notificationsTable;
-const NOTIFICATION_DEVICE_READS_TABLE = SITE_CONFIG.notificationReadsTable;
-const HANDOVERS_TABLE = SITE_CONFIG.handoversTable;
-const BUG_REPORTS_TABLE = SITE_CONFIG.bugReportsTable;
-
-function applySiteConfig() {
-  document.querySelectorAll('[data-site-name]').forEach(element => {
-    element.textContent = SITE_CONFIG.name;
-  });
-  document.querySelectorAll('[data-site-short-name]').forEach(element => {
-    element.textContent = SITE_CONFIG.shortName;
-  });
-  document.title = `DGSL Site Register — ${SITE_CONFIG.name}`;
-}
-
-applySiteConfig();
-document.addEventListener('DOMContentLoaded', applySiteConfig);
+const SITE_VERSION = '1.3.3';
+const NOTIFICATIONS_TABLE = 'site_notifications_test';
 
 // Single source of truth for the website version.
 function applySiteVersion() {
@@ -278,7 +229,7 @@ function openDataManagementDialog() {
           if (!Array.isArray(imported)) throw new Error('Invalid backup');
           for (const record of imported) {
             const databaseRecord = toDatabase(record);
-            const { error } = await supabaseClient.from(HANDOVERS_TABLE).upsert(databaseRecord);
+            const { error } = await supabaseClient.from('handovers_test').upsert(databaseRecord);
             if (error) throw error;
           }
           await loadRecords();
@@ -298,6 +249,7 @@ function openDataManagementDialog() {
   refreshBugReportsBadge();
 }
 
+const BUG_REPORTS_TABLE = 'bug_reports_test';
 
 function isBugReportAdmin() {
   // Bug Reports are available to any logged-in user.
@@ -674,6 +626,7 @@ async function openBugReportsDialog() {
   }
 }
 
+const NOTIFICATION_DEVICE_READS_TABLE = 'site_notification_device_reads_test';
 
 function getNotificationDeviceKey() {
   const values = [
@@ -1331,7 +1284,7 @@ async function loadRecords() {
       error
     } =
       await supabaseClient
-        .from(HANDOVERS_TABLE)
+        .from('handovers_test')
         .select('*');
 
     if (error) {
@@ -1400,7 +1353,7 @@ async function setupRealtime() {
       {
         event: '*',
         schema: 'public',
-        table: HANDOVERS_TABLE
+        table: 'handovers_test'
       },
       async () => {
         await loadRecords();
@@ -2183,7 +2136,7 @@ function showRowMoreDialog(record) {
           }
         }
         const { error } = await supabaseClient
-          .from(HANDOVERS_TABLE)
+          .from('handovers_test')
           .delete()
           .eq('id', record.id);
         if (error) throw error;
@@ -3276,7 +3229,7 @@ for (
           error
         } =
           await supabaseClient
-            .from(HANDOVERS_TABLE)
+            .from('handovers_test')
             .update(
               databaseRecord
             )
@@ -3296,7 +3249,7 @@ for (
           error
         } =
           await supabaseClient
-            .from(HANDOVERS_TABLE)
+            .from('handovers_test')
             .insert(
               databaseRecord
             );
@@ -3525,7 +3478,7 @@ async function copyHandover(record) {
 
     const { error } =
       await supabaseClient
-        .from(HANDOVERS_TABLE)
+        .from('handovers_test')
         .insert(databaseRecord);
 
     if (error) {
@@ -3970,7 +3923,7 @@ $('#delete').onclick =
         error
       } =
         await supabaseClient
-          .from(HANDOVERS_TABLE)
+          .from('handovers_test')
           .delete()
           .eq(
             'id',
@@ -4697,7 +4650,7 @@ async function generatePdf(viewOnly = false) {
 
 
     pdf.text(
-      SITE_CONFIG.name,
+      'Knocksedan, PH3',
       margin,
       y
     );
