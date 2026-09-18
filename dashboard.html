@@ -70,6 +70,9 @@
   .add-site-header{width:auto;min-height:0;font-size:16px;padding:9px 14px}
   .settings-btn{width:42px;height:42px;padding:6px}
 }
+
+.settings-menu{display:grid;gap:8px;margin-top:12px}.settings-menu-btn{width:100%;text-align:left;border:1px solid #d6dde3;background:#fff;color:#17212b;border-radius:8px;padding:12px 14px;font-weight:700;font-size:14px;cursor:pointer}.settings-menu-btn:hover{background:#f7f8f9}.dashboard-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:7px;border-radius:999px;background:#2f80ed;color:#fff;font-size:11px;font-weight:800;vertical-align:middle}.management-box{max-width:500px}.data-management-box{max-width:500px}.data-management-box select{width:100%;padding:11px 12px;border:1px solid #ccd3d8;border-radius:6px;margin:7px 0 12px;font-size:16px;background:#fff}.management-actions{display:grid;gap:8px}.management-import-label{display:block}.bug-reports-box{width:min(950px,94vw);max-width:950px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column}.bug-detail-box{width:min(700px,94vw);max-width:700px;max-height:82vh;overflow:auto}.management-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.management-modal-head h2{margin:0}.modal-x{border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer;color:#17212b}.bug-reports-site{font-size:13px;color:#68737d;margin:8px 0 14px}.management-list{overflow:auto;min-height:0;padding-right:2px}.bug-report-item{display:block;width:100%;text-align:left;border:1px solid #d9e1ea;border-radius:12px;background:#fff;padding:14px 16px;margin:0 0 10px;cursor:pointer}.bug-report-item:hover{background:#f7f9fb}.bug-report-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}.bug-report-new{flex:none;background:#2f80ed;color:#fff;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800}.bug-report-meta{font-size:12px;color:#68737d;margin-bottom:7px}.bug-report-summary{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bug-detail-field{margin-bottom:14px;line-height:1.45}.danger-btn{background:#c62828;color:#fff;border:1px solid #c62828}.danger-btn:hover{background:#ad2020}
+@media(max-width:700px){.settings-menu-btn{font-size:16px;padding:12px}.data-management-box,.bug-reports-box,.bug-detail-box{max-width:100%}.bug-reports-box{max-height:86vh}.bug-detail-box{max-height:86vh}}
 </style>
 </head>
 <body>
@@ -103,10 +106,37 @@
 
 <div class="modal" id="settingsModal"><div class="box settings-box">
   <h2>Settings</h2>
+  <div class="settings-menu">
+    <button class="settings-menu-btn" id="settingsDataManagement">Data Management <span id="dashboardBugBadge" class="dashboard-badge hidden"></span></button>
+  </div>
   <div class="actions">
     <button class="btn secondary" id="settingsClose">Close</button>
     <button class="btn primary" id="settingsLogout">Log out</button>
   </div>
+</div></div>
+
+<div class="modal" id="dataManagementModal"><div class="box data-management-box">
+  <h2>Data Management</h2>
+  <label for="managementSiteSelect">Site</label>
+  <select id="managementSiteSelect"></select>
+  <div class="management-actions">
+    <button class="settings-menu-btn" id="managementBugReports">Bug Reports <span id="managementBugBadge" class="dashboard-badge hidden"></span></button>
+    <button class="settings-menu-btn" id="managementExport">Export Data</button>
+    <label class="settings-menu-btn management-import-label" for="managementImport">Import Data<input id="managementImport" type="file" accept="application/json" hidden></label>
+  </div>
+  <div class="actions"><button class="btn secondary" id="managementClose">Close</button></div>
+</div></div>
+
+<div class="modal" id="managementBugReportsModal"><div class="box bug-reports-box">
+  <div class="management-modal-head"><h2>Bug Reports</h2><button class="modal-x" id="managementBugReportsClose" aria-label="Close">×</button></div>
+  <div class="bug-reports-site" id="managementBugReportsSite"></div>
+  <div id="managementBugReportsList" class="management-list">Loading reports…</div>
+</div></div>
+
+<div class="modal" id="managementBugDetailModal"><div class="box bug-detail-box">
+  <div class="management-modal-head"><h2>Bug Report</h2><button class="modal-x" id="managementBugDetailClose" aria-label="Close">×</button></div>
+  <div id="managementBugDetailContent"></div>
+  <div class="actions"><button class="btn danger-btn" id="managementBugDelete">Delete Bug Report</button></div>
 </div></div>
 
 <div class="modal" id="loginModal"><div class="box">
@@ -226,9 +256,9 @@ function renderSites(sites){
     });
   });
 }
-async function loadSites(){clearError();$('loading').hidden=false;$('grid').hidden=true;const {data,error}=await supabaseClient.from('sites_test').select('site_id,site_name,address,active,sort_order,photo_bucket').order('sort_order',{ascending:true}).order('site_name',{ascending:true});if(error){showError('Could not load the site list: '+error.message);$('loading').hidden=true;return;}cachedSites=data||[];renderSites(cachedSites)}
+async function loadSites(){clearError();$('loading').hidden=false;$('grid').hidden=true;const {data,error}=await supabaseClient.from('sites_test').select('site_id,site_name,address,active,sort_order,photo_bucket').order('sort_order',{ascending:true}).order('site_name',{ascending:true});if(error){showError('Could not load the site list: '+error.message);$('loading').hidden=true;return;}cachedSites=data||[];populateManagementSites();renderSites(cachedSites);refreshDashboardBugBadge();}
 let cachedSites=[];
-async function updateAuthUI(){const {data}=await supabaseClient.auth.getSession();currentSession=data.session||null;$('userLabel').textContent='';$('addBtn').classList.toggle('hidden',!isAdmin());$('settingsBtn').classList.toggle('hidden',!currentSession);$('headerLogin').classList.toggle('hidden',!!currentSession);$('settingsLogout').classList.toggle('hidden',!currentSession);if(cachedSites.length)renderSites(cachedSites);}
+async function updateAuthUI(){const {data}=await supabaseClient.auth.getSession();currentSession=data.session||null;$('userLabel').textContent='';$('addBtn').classList.toggle('hidden',!isAdmin());$('settingsBtn').classList.toggle('hidden',!currentSession);$('headerLogin').classList.toggle('hidden',!!currentSession);$('settingsLogout').classList.toggle('hidden',!currentSession);if(cachedSites.length){renderSites(cachedSites);populateManagementSites();}if(!currentSession){closeDashboardDataManagement();$('managementBugReportsModal').classList.remove('show');$('managementBugDetailModal').classList.remove('show');}refreshDashboardBugBadge();}
 async function refresh(){await loadSites();}
 $('settingsBtn').onclick=()=>{$('settingsModal').classList.add('show')};
 $('headerLogin').onclick=()=>{$('loginModal').classList.add('show');setTimeout(()=>$('password').focus(),50)};
@@ -260,6 +290,196 @@ async function copySiteUrl(){
     area.remove();
   }
 }
+
+
+let managementSiteId = 'SWORDS';
+let managementBugReports = [];
+let managementSelectedBug = null;
+
+function getManagementSite(){
+  return cachedSites.find(site => site.site_id === managementSiteId) || cachedSites[0] || null;
+}
+
+function updateDashboardBugBadge(count){
+  const badges = [$('dashboardBugBadge'), $('managementBugBadge')];
+  badges.forEach(badge=>{
+    if(!badge) return;
+    const n=Number(count)||0;
+    badge.textContent=n>99?'99+':String(n);
+    badge.classList.toggle('hidden',n===0);
+  });
+}
+
+async function refreshDashboardBugBadge(){
+  if(!currentSession || !cachedSites.length){ updateDashboardBugBadge(0); return; }
+  try{
+    const {count,error}=await supabaseClient.from('bug_reports_test').select('id',{count:'exact',head:true}).eq('is_read',false);
+    if(error) throw error;
+    updateDashboardBugBadge(count||0);
+  }catch(error){
+    console.error('Dashboard bug badge error:',error);
+    updateDashboardBugBadge(0);
+  }
+}
+
+function populateManagementSites(){
+  const select=$('managementSiteSelect');
+  if(!select) return;
+  if(!cachedSites.length){select.innerHTML='<option value="">No sites available</option>';return;}
+  if(!cachedSites.some(s=>s.site_id===managementSiteId)) managementSiteId=cachedSites[0].site_id;
+  select.innerHTML=cachedSites.map(site=>`<option value="${escapeHtml(site.site_id)}">${escapeHtml(site.site_name)} (${escapeHtml(site.site_id)})</option>`).join('');
+  select.value=managementSiteId;
+}
+
+function openDashboardDataManagement(){
+  if(!currentSession) return;
+  populateManagementSites();
+  $('dataManagementModal').classList.add('show');
+  refreshDashboardBugBadge();
+}
+
+function closeDashboardDataManagement(){
+  $('dataManagementModal').classList.remove('show');
+}
+
+function backupRecordFromDatabase(x){
+  let photos=[];
+  let takeBackChecklist={};
+  try{photos=x.photos?JSON.parse(x.photos):[];}catch(_){photos=[];}
+  try{takeBackChecklist=x.take_back_checklist?JSON.parse(x.take_back_checklist):{};}catch(_){takeBackChecklist={};}
+  return {
+    id:x.id, site_id:x.site_id, zone:x.zone||'', level:x.level||'', drawing:x.drawing||'', trade:x.trade||'', contractor:x.contractor||'', foreman:x.foreman||'', description:x.description||'', status:x.status||'', handover:x.handover||'', handoverDate:x.handover_date||'', takeBackDate:x.take_back_date||'', closedDate:x.closed_date||'', notes:x.notes||'', contractorSigner:x.contractor_signer||'', dgslSigner:x.dgsl_signer||'', contractorSignature:x.contractor_signature||'', dgslSignature:x.dgsl_signature||'', photos, healthSafetyScaffolding:x.health_safety_scaffolding||'', takeBackCompleteDrawings:x.take_back_complete_drawings||'', takeBackHousekeeping:x.take_back_housekeeping||'', takeBackSnagCompleted:x.take_back_snag_completed||'', takeBackChecklist
+  };
+}
+
+function databaseRecordFromBackup(x,siteId){
+  return {
+    id:x.id,
+    site_id:siteId,
+    zone:x.zone||null,
+    level:x.level||null,
+    drawing:x.drawing||null,
+    trade:x.trade||null,
+    contractor:x.contractor||null,
+    foreman:x.foreman||null,
+    description:x.description||null,
+    status:x.status||null,
+    handover:x.handover||null,
+    handover_date:x.handoverDate||null,
+    take_back_date:x.takeBackDate||null,
+    closed_date:x.closedDate||null,
+    notes:x.notes||null,
+    contractor_signer:x.contractorSigner||null,
+    dgsl_signer:x.dgslSigner||null,
+    contractor_signature:x.contractorSignature||null,
+    dgsl_signature:x.dgslSignature||null,
+    photos:JSON.stringify(x.photos||[]),
+    health_safety_scaffolding:x.healthSafetyScaffolding||null,
+    take_back_complete_drawings:x.takeBackCompleteDrawings||null,
+    take_back_housekeeping:x.takeBackHousekeeping||null,
+    take_back_snag_completed:x.takeBackSnagCompleted||null,
+    take_back_checklist:JSON.stringify(x.takeBackChecklist||{})
+  };
+}
+
+async function exportManagementData(){
+  const site=getManagementSite();
+  if(!site) return;
+  const {data,error}=await supabaseClient.from('handovers_test').select('*').eq('site_id',site.site_id).order('handover_date',{ascending:false,nullsLast:true});
+  if(error){alert('Unable to export data: '+error.message);return;}
+  const backup=(data||[]).map(backupRecordFromDatabase);
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(blob);
+  link.download=`DGSL-${site.site_id}-backup-${new Date().toISOString().slice(0,10)}.json`;
+  link.click();
+  setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+}
+
+async function importManagementData(event){
+  const file=event.target.files?.[0];
+  event.target.value='';
+  if(!file) return;
+  const site=getManagementSite();
+  if(!site) return;
+  try{
+    const imported=JSON.parse(await file.text());
+    if(!Array.isArray(imported)) throw new Error('Invalid backup');
+    if(!confirm(`Import ${imported.length} handover${imported.length===1?'':'s'} into ${site.site_name}? Existing records with the same ID will be updated.`)) return;
+    for(const record of imported){
+      const databaseRecord=databaseRecordFromBackup(record,site.site_id);
+      const {error}=await supabaseClient.from('handovers_test').upsert(databaseRecord);
+      if(error) throw error;
+    }
+    alert('Backup imported.');
+  }catch(error){
+    console.error('Dashboard import error:',error);
+    alert('That file is not a valid DGSL backup or could not be imported.');
+  }
+}
+
+function formatManagementDate(value){
+  if(!value) return '';
+  const d=new Date(value);
+  return Number.isNaN(d.getTime())?String(value):d.toLocaleString('en-IE');
+}
+function bugEscape(value){return escapeHtml(value).replace(/\n/g,'<br>');}
+
+async function openManagementBugReports(){
+  const site=getManagementSite();
+  if(!site || !currentSession) return;
+  $('managementBugReportsSite').textContent=`${site.site_name} · Site ID: ${site.site_id}`;
+  $('managementBugReportsList').innerHTML='<p>Loading reports…</p>';
+  $('managementBugReportsModal').classList.add('show');
+  const {data,error}=await supabaseClient.from('bug_reports_test').select('id,name,trying_to_do,report,created_at,website_version,page_url,is_read').eq('site_id',site.site_id).order('created_at',{ascending:false});
+  if(error){$('managementBugReportsList').innerHTML='<p>Unable to load bug reports.</p>';return;}
+  managementBugReports=data||[];
+  if(!managementBugReports.length){$('managementBugReportsList').innerHTML='<p>No bug reports have been submitted.</p>';return;}
+  $('managementBugReportsList').innerHTML=managementBugReports.map((item,index)=>`<button class="bug-report-item" data-management-bug-index="${index}"><div class="bug-report-item-head"><strong>${escapeHtml(item.name)}</strong>${!item.is_read?'<span class="bug-report-new">NEW</span>':''}</div><div class="bug-report-meta">${escapeHtml(formatManagementDate(item.created_at))} · Version ${escapeHtml(item.website_version||'')}</div><div class="bug-report-summary"><strong>Report:</strong> ${escapeHtml(item.report)}</div></button>`).join('');
+  $('managementBugReportsList').querySelectorAll('[data-management-bug-index]').forEach(btn=>btn.onclick=()=>openManagementBugDetail(managementBugReports[Number(btn.dataset.managementBugIndex)]));
+  await refreshDashboardBugBadge();
+}
+
+async function openManagementBugDetail(item){
+  if(!item) return;
+  managementSelectedBug=item;
+  const site=getManagementSite();
+  if(!site) return;
+  if(!item.is_read){
+    const {error}=await supabaseClient.from('bug_reports_test').update({is_read:true}).eq('id',item.id).eq('site_id',site.site_id);
+    if(!error) item.is_read=true;
+  }
+  $('managementBugDetailContent').innerHTML=`<div class="bug-detail-field"><strong>${escapeHtml(item.name)}</strong></div><div class="bug-detail-field"><strong>What they were trying to do</strong><br>${bugEscape(item.trying_to_do)}</div><div class="bug-detail-field"><strong>Report</strong><br>${bugEscape(item.report)}</div><div class="bug-detail-field"><strong>Date / time</strong><br>${escapeHtml(formatManagementDate(item.created_at))}</div><div class="bug-detail-field"><strong>Version</strong><br>${escapeHtml(item.website_version||'')}</div>${item.page_url?`<div class="bug-detail-field"><strong>Page</strong><br><span style="overflow-wrap:anywhere">${escapeHtml(item.page_url)}</span></div>`:''}`;
+  $('managementBugReportsModal').classList.remove('show');
+  $('managementBugDetailModal').classList.add('show');
+  await refreshDashboardBugBadge();
+}
+
+async function deleteManagementBugReport(){
+  if(!managementSelectedBug) return;
+  const site=getManagementSite();
+  if(!site) return;
+  if(!confirm('Delete this bug report? This cannot be undone.')) return;
+  const {error}=await supabaseClient.from('bug_reports_test').delete().eq('id',managementSelectedBug.id).eq('site_id',site.site_id);
+  if(error){alert('Unable to delete this bug report. Please check the Supabase DELETE policy.');return;}
+  managementSelectedBug=null;
+  $('managementBugDetailModal').classList.remove('show');
+  await refreshDashboardBugBadge();
+  await openManagementBugReports();
+}
+
+$('settingsDataManagement').onclick=()=>{closeDashboardDataManagement();openDashboardDataManagement()};
+$('managementClose').onclick=closeDashboardDataManagement;
+$('managementSiteSelect').onchange=e=>{managementSiteId=e.target.value;refreshDashboardBugBadge();};
+$('managementBugReports').onclick=openManagementBugReports;
+$('managementExport').onclick=exportManagementData;
+$('managementImport').onchange=importManagementData;
+$('managementBugReportsClose').onclick=()=>$('managementBugReportsModal').classList.remove('show');
+$('managementBugDetailClose').onclick=()=>$('managementBugDetailModal').classList.remove('show');
+$('managementBugDelete').onclick=deleteManagementBugReport;
+$('dataManagementModal').addEventListener('click',e=>{if(e.target===$('dataManagementModal'))closeDashboardDataManagement();});
+$('managementBugReportsModal').addEventListener('click',e=>{if(e.target===$('managementBugReportsModal'))$('managementBugReportsModal').classList.remove('show');});
+$('managementBugDetailModal').addEventListener('click',e=>{if(e.target===$('managementBugDetailModal'))$('managementBugDetailModal').classList.remove('show');});
 
 async function toggleSite(site){
   if(!isAdmin()) return;

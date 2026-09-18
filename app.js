@@ -160,8 +160,6 @@ function updateAuthUi() {
   if (notificationsButton) notificationsButton.style.display = currentUser ? '' : 'none';
   if (settingsButton) settingsButton.style.display = currentUser ? '' : 'none';
   showBugReportsButtonForAdmin();
-  const bugReportsButton = document.getElementById('settingsBugReports');
-  if (bugReportsButton) bugReportsButton.style.display = isBugReportAdmin() ? '' : 'none';
 
   const editHeader = document.getElementById('editHeader');
   if (editHeader) editHeader.style.display = currentUser ? '' : 'none';
@@ -198,7 +196,6 @@ function openSettingsDialog() {
         <div class="settings-options">
           <button type="button" id="settingsChangeLog" class="settings-option">Change Log</button>
           <button type="button" id="settingsBugReport" class="settings-option">Report a Bug</button>
-          <button type="button" id="settingsDataManagement" class="settings-option" style="position:relative;">Data Management <span id="dataManagementBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span></button>
           <button type="button" id="settingsLogout" class="settings-option settings-logout">Log out</button>
         </div>
       </div>
@@ -214,95 +211,14 @@ function openSettingsDialog() {
       dialog.close();
       openBugReportDialog();
     };
-    dialog.querySelector('#settingsDataManagement').onclick = () => {
-      dialog.close();
-      openDataManagementDialog();
-    };
     dialog.querySelector('#settingsLogout').onclick = () => {
       dialog.close();
       showLogoutConfirmDialog();
     };
   }
   if (!dialog.open) dialog.showModal();
-  showBugReportsButtonForAdmin();
 }
 
-
-function openDataManagementDialog() {
-  let dialog = document.getElementById('dgslDataManagementDialog');
-
-  if (!dialog) {
-    dialog = document.createElement('dialog');
-    dialog.id = 'dgslDataManagementDialog';
-    dialog.className = 'header-settings-dialog';
-    dialog.innerHTML = `
-      <div class="header-dialog-inner">
-        <div class="header-dialog-head">
-          <div>
-            <p class="eyebrow">DGSL SITE REGISTER</p>
-            <h2>Data Management</h2>
-          </div>
-          <button type="button" class="icon" id="closeDataManagement" aria-label="Close">×</button>
-        </div>
-        <div class="settings-options">
-          <button type="button" id="dataManagementBugReports" class="settings-option" style="position:relative;">
-            Bug Reports
-            <span id="dataManagementBugReportsBadge" class="notification-badge bug-reports-badge" aria-label="unread bug reports" style="display:none;"></span>
-          </button>
-          <button type="button" id="dataManagementExport" class="settings-option">Export Data</button>
-          <label class="settings-option settings-import-option" for="dataManagementImport">
-            <span>Import Data</span>
-            <input id="dataManagementImport" type="file" accept="application/json" hidden>
-          </label>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(dialog);
-
-    dialog.querySelector('#closeDataManagement').onclick = () => dialog.close();
-
-    dialog.querySelector('#dataManagementBugReports').onclick = () => {
-      dialog.close();
-      openBugReportsDialog();
-    };
-
-    dialog.querySelector('#dataManagementExport').onclick = () => {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }));
-      link.download = `DGSL-site-register-${today()}.json`;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(link.href), 0);
-    };
-
-    dialog.querySelector('#dataManagementImport').onchange = async e => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          const imported = JSON.parse(reader.result);
-          if (!Array.isArray(imported)) throw new Error('Invalid backup');
-          for (const record of imported) {
-            const databaseRecord = toDatabase(record);
-            const { error } = await supabaseClient.from(SITE.handoversTable).upsert(databaseRecord);
-            if (error) throw error;
-          }
-          await loadRecords();
-          alert('Backup imported.');
-        } catch (error) {
-          console.error(error);
-          alert('That file is not a valid DGSL backup.');
-        } finally {
-          e.target.value = '';
-        }
-      };
-      reader.readAsText(file);
-    };
-  }
-
-  if (!dialog.open) dialog.showModal();
-  refreshBugReportsBadge();
-}
 
 const BUG_REPORTS_TABLE = SITE.bugReportsTable;
 
@@ -315,52 +231,6 @@ function bugReportEscape(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[char]));
-}
-
-function updateBugReportsBadge(unreadCount) {
-  const count = Number(unreadCount) || 0;
-  const badges = [
-    document.getElementById('dataManagementBadge'),
-    document.getElementById('dataManagementBugReportsBadge')
-  ];
-
-  badges.forEach(badge => {
-    if (!badge) return;
-    badge.textContent = count > 99 ? '99+' : (count > 0 ? String(count) : '');
-    badge.className = 'notification-badge bug-reports-badge';
-    // Use an inline !important rule so the badge can never be forced visible
-    // by the notification CSS when there are zero unread reports.
-    badge.style.setProperty('display', count > 0 ? 'inline-flex' : 'none', 'important');
-  });
-}
-
-async function refreshBugReportsBadge() {
-  if (!isBugReportAdmin() || !supabaseClient) {
-    updateBugReportsBadge(0);
-    return;
-  }
-
-  try {
-    const { count, error } = await supabaseClient
-      .from(BUG_REPORTS_TABLE)
-      .select('id', { count: 'exact', head: true })
-      .eq('site_id', SITE.id)
-      .eq('is_read', false);
-    if (error) throw error;
-    updateBugReportsBadge(count || 0);
-  } catch (error) {
-    console.error('Bug report unread count error:', error);
-    // If the unread-count request fails (for example because the table
-    // policy rejects the request), do not leave a stale badge showing.
-    updateBugReportsBadge(0);
-  }
-}
-
-function showBugReportsButtonForAdmin() {
-  const button = document.getElementById('settingsDataManagement');
-  if (button) button.style.display = isBugReportAdmin() ? '' : 'none';
-  if (isBugReportAdmin()) refreshBugReportsBadge();
-  else updateBugReportsBadge(0);
 }
 
 function openBugReportDialog() {
@@ -438,7 +308,6 @@ async function submitBugReport() {
     dialog.querySelector('#bugReportTask').value = '';
     dialog.querySelector('#bugReportDescription').value = '';
     status.textContent = 'Bug report submitted. Thank you.';
-    if (isBugReportAdmin()) refreshBugReportsBadge();
     setTimeout(() => { if (dialog.open) dialog.close(); }, 900);
   } catch (error) {
     console.error('Bug report error:', error);
@@ -468,7 +337,6 @@ async function openBugReportDetail(item, parentDialog) {
     }
 
     item.is_read = true;
-    refreshBugReportsBadge();
   }
 
   let detail = document.getElementById('dgslBugReportDetailDialog');
@@ -567,7 +435,6 @@ async function openBugReportDetail(item, parentDialog) {
       if (parentDialog?.open) {
         await openBugReportsDialog();
       }
-      await refreshBugReportsBadge();
     } catch (error) {
       console.error('Bug report delete error:', error);
       alert('Unable to delete this bug report. Please check the Supabase DELETE policy.');
@@ -642,12 +509,10 @@ async function openBugReportsDialog() {
 
     if (!data?.length) {
       list.innerHTML = '<p>No bug reports have been submitted.</p>';
-      updateBugReportsBadge(0);
       return;
     }
 
     const unreadCount = data.filter(item => !item.is_read).length;
-    updateBugReportsBadge(unreadCount);
 
     list.innerHTML = data.map((item, index) => `
       <button type="button" class="bug-report-list-item" data-bug-report-index="${index}" data-bug-report-id="${bugReportEscape(item.id)}"
@@ -677,7 +542,6 @@ async function openBugReportsDialog() {
 
         const remainingUnread = Array.from(list.querySelectorAll('[data-bug-report-index]'))
           .filter(row => !row.dataset.bugReportRead && row.querySelector('[data-bug-report-new]')).length;
-        updateBugReportsBadge(remainingUnread);
       };
     });
   } catch (error) {
