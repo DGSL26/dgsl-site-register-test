@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DGSL Site Register — Dashboard</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#17212b}.wrap{max-width:1150px;margin:0 auto;padding:28px 20px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:14px}.brand img{width:52px;height:52px;object-fit:contain}.brand h1{margin:0;font-size:25px}.brand p{margin:4px 0 0;color:#68737d}.btn{border:0;border-radius:7px;padding:10px 15px;font-weight:700;cursor:pointer}.primary{background:#008e39;color:#fff}.secondary{background:#fff;border:1px solid #ccd3d8;color:#17212b}.danger{background:#fff1f0;color:#9f201b;border:1px solid #f2b8b5}.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:18px}.user{margin-left:auto;color:#68737d;font-size:13px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}.card{background:#fff;border:1px solid #dfe4e8;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.05)}.card h2{margin:0 0 7px;font-size:20px}.meta{color:#68737d;font-size:14px;line-height:1.65}.status{display:inline-block;margin-top:13px;padding:5px 9px;border-radius:999px;background:#e7f6ed;color:#16733b;font-size:12px;font-weight:700}.status.inactive{background:#f3f4f6;color:#68737d}.open{display:block;text-align:center;text-decoration:none;background:#008e39;color:#fff;padding:11px;border-radius:7px;margin-top:18px;font-weight:700}.edit{display:block;text-align:center;margin-top:9px;padding:10px;border-radius:7px;border:1px solid #ccd3d8;background:#fff;color:#17212b;font-weight:700;cursor:pointer;width:100%}.note{margin:25px 0 0;color:#68737d;font-size:13px}.error-banner{display:none;background:#fff1f0;border:1px solid #f2b8b5;color:#9f201b;border-radius:10px;padding:14px;margin-bottom:18px}.error-banner.show{display:block}.loading{background:#fff;border:1px solid #dfe4e8;border-radius:12px;padding:25px;color:#68737d}.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}.modal.show{display:flex}.box{background:#fff;border-radius:12px;padding:22px;max-width:430px;width:100%}.box h2{margin-top:0}.box label{display:block;font-size:13px;font-weight:700;margin-top:12px}.box input{width:100%;padding:11px;border:1px solid #ccd3d8;border-radius:6px;margin:7px 0}.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.error{color:#b42318;font-size:13px;min-height:18px;margin-bottom:8px}.hidden{display:none!important}.section-title{display:flex;align-items:center;gap:10px;margin:0 0 14px}.section-title h2{font-size:18px;margin:0}@media(max-width:600px){.top{align-items:flex-start}.brand h1{font-size:21px}.user{display:none}.toolbar{flex-wrap:wrap}}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#17212b}.wrap{max-width:1150px;margin:0 auto;padding:28px 20px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:14px}.brand img{width:52px;height:52px;object-fit:contain}.brand h1{margin:0;font-size:25px}.brand p{margin:4px 0 0;color:#68737d}.btn{border:0;border-radius:7px;padding:10px 15px;font-weight:700;cursor:pointer}.primary{background:#008e39;color:#fff}.secondary{background:#fff;border:1px solid #ccd3d8;color:#17212b}.danger{background:#fff1f0;color:#9f201b;border:1px solid #f2b8b5}.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:18px}.user{margin-left:auto;color:#68737d;font-size:13px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}.card{background:#fff;border:1px solid #dfe4e8;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.05)}.card h2{margin:0 0 7px;font-size:20px}.meta{color:#68737d;font-size:14px;line-height:1.65}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}.stat{background:#f7f8f9;border:1px solid #e5e8eb;border-radius:8px;padding:10px 8px;text-align:center}.stat .num{display:block;font-size:20px;font-weight:800;color:#17212b;min-height:24px}.stat .label{display:block;margin-top:3px;font-size:11px;color:#68737d}.last{margin-top:10px;font-size:12px;color:#68737d}.stat.loading .num{opacity:.45}.status{display:inline-block;margin-top:13px;padding:5px 9px;border-radius:999px;background:#e7f6ed;color:#16733b;font-size:12px;font-weight:700}.status.inactive{background:#f3f4f6;color:#68737d}.open{display:block;text-align:center;text-decoration:none;background:#008e39;color:#fff;padding:11px;border-radius:7px;margin-top:18px;font-weight:700}.edit{display:block;text-align:center;margin-top:9px;padding:10px;border-radius:7px;border:1px solid #ccd3d8;background:#fff;color:#17212b;font-weight:700;cursor:pointer;width:100%}.note{margin:25px 0 0;color:#68737d;font-size:13px}.error-banner{display:none;background:#fff1f0;border:1px solid #f2b8b5;color:#9f201b;border-radius:10px;padding:14px;margin-bottom:18px}.error-banner.show{display:block}.loading{background:#fff;border:1px solid #dfe4e8;border-radius:12px;padding:25px;color:#68737d}.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}.modal.show{display:flex}.box{background:#fff;border-radius:12px;padding:22px;max-width:430px;width:100%}.box h2{margin-top:0}.box label{display:block;font-size:13px;font-weight:700;margin-top:12px}.box input{width:100%;padding:11px;border:1px solid #ccd3d8;border-radius:6px;margin:7px 0}.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.error{color:#b42318;font-size:13px;min-height:18px;margin-bottom:8px}.hidden{display:none!important}.section-title{display:flex;align-items:center;gap:10px;margin:0 0 14px}.section-title h2{font-size:18px;margin:0}@media(max-width:600px){.top{align-items:flex-start}.brand h1{font-size:21px}.user{display:none}.toolbar{flex-wrap:wrap}}
 </style>
 </head>
 <body>
@@ -56,11 +56,75 @@ function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,c=>({'&':
 function showError(text){$('loadError').textContent=text;$('loadError').classList.add('show')}
 function clearError(){$('loadError').classList.remove('show')}
 function isAdmin(){return !!currentSession?.user?.email && currentSession.user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase()}
-function renderSites(sites){$('loading').hidden=true;$('grid').hidden=false;$('grid').innerHTML='';if(!sites.length){$('grid').innerHTML='<div class="card">No sites configured.</div>';return;}sites.forEach(site=>{const card=document.createElement('section');card.className='card';const statusClass=site.active?'':' inactive';const statusText=site.active?'ACTIVE':'INACTIVE';const address=site.address?`<br>Address: ${escapeHtml(site.address)}`:'';card.innerHTML=`<h2>${escapeHtml(site.site_name)}</h2><div class="meta">Site ID: ${escapeHtml(site.site_id)}${address}<br>Photos: ${escapeHtml(site.photo_bucket||'Not configured')}<br>TEST application</div><span class="status${statusClass}">${statusText}</span>${site.active?`<a class="open" href="${appUrl(site.site_id)}">Open ${escapeHtml(site.site_name)} TEST</a>`:''}${isAdmin()?`<button class="edit" data-site="${escapeHtml(site.site_id)}">Edit</button>`:''}`;card.querySelector('.edit')?.addEventListener('click',()=>openEdit(site));$('grid').appendChild(card);});}
-async function loadSites(){clearError();$('loading').hidden=false;$('grid').hidden=true;const {data,error}=await supabaseClient.from('sites_test').select('site_id,site_name,address,active,sort_order,photo_bucket').order('sort_order',{ascending:true}).order('site_name',{ascending:true});if(error){showError('Could not load the site list: '+error.message);$('loading').hidden=true;return;}renderSites(data||[])}
-async function updateAuthUI(){const {data}=await supabaseClient.auth.getSession();currentSession=data.session||null;if(currentSession){$('loginBtn').textContent='Log out';$('userLabel').textContent=currentSession.user.email||'';}else{$('loginBtn').textContent='Login';$('userLabel').textContent='';}$('addBtn').classList.toggle('hidden',!isAdmin());renderSitesFromCurrent();}
-let cachedSites=[];function renderSitesFromCurrent(){if(cachedSites.length)renderSites(cachedSites)}
-async function refresh(){const {data,error}=await supabaseClient.from('sites_test').select('site_id,site_name,address,active,sort_order,photo_bucket').order('sort_order',{ascending:true}).order('site_name',{ascending:true});if(error){showError(error.message);return;}cachedSites=data||[];renderSites(cachedSites)}
+function formatDate(value){
+  if(!value) return '—';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-IE',{day:'2-digit',month:'short',year:'numeric'});
+}
+async function getSiteStats(site){
+  const [handoverResult,bugResult,latestResult,photoResult]=await Promise.all([
+    supabaseClient.from('handovers_test').select('id',{count:'exact',head:true}).eq('site_id',site.site_id),
+    supabaseClient.from('bug_reports_test').select('id',{count:'exact',head:true}).eq('site_id',site.site_id).eq('status','New'),
+    supabaseClient.from('handovers_test').select('created_at').eq('site_id',site.site_id).order('created_at',{ascending:false}).limit(1).maybeSingle(),
+    countStorageFiles(site.photo_bucket)
+  ]);
+  return {
+    handovers:handoverResult.count ?? 0,
+    newBugReports:bugResult.count ?? 0,
+    lastHandover:latestResult.data?.created_at || null,
+    photos:photoResult
+  };
+}
+async function countStorageFiles(bucket){
+  if(!bucket) return 0;
+  let total=0;
+  async function walk(prefix=''){
+    const {data,error}=await supabaseClient.storage.from(bucket).list(prefix,{limit:1000,offset:0,sortBy:{column:'name',order:'asc'}});
+    if(error) return;
+    for(const item of (data||[])){
+      const path=prefix ? `${prefix}/${item.name}` : item.name;
+      if(item.id){ total++; }
+      else { await walk(path); }
+    }
+  }
+  await walk('');
+  return total;
+}
+function renderSites(sites){
+  $('loading').hidden=true;$('grid').hidden=false;$('grid').innerHTML='';
+  if(!sites.length){$('grid').innerHTML='<div class="card">No sites configured.</div>';return;}
+  sites.forEach(site=>{
+    const card=document.createElement('section');card.className='card';
+    const statusClass=site.active?'':' inactive';const statusText=site.active?'ACTIVE':'INACTIVE';
+    const address=site.address?`<br>Address: ${escapeHtml(site.address)}`:'';
+    card.innerHTML=`<h2>${escapeHtml(site.site_name)}</h2><div class="meta">Site ID: ${escapeHtml(site.site_id)}${address}<br>TEST application</div><span class="status${statusClass}">${statusText}</span>
+      <div class="stats">
+        <div class="stat loading"><span class="num">…</span><span class="label">Handovers</span></div>
+        <div class="stat loading"><span class="num">…</span><span class="label">New bug reports</span></div>
+        <div class="stat loading"><span class="num">…</span><span class="label">Photos</span></div>
+      </div>
+      <div class="last">Last handover: <strong>…</strong></div>
+      ${site.active?`<a class="open" href="${appUrl(site.site_id)}">Open ${escapeHtml(site.site_name)} TEST</a>`:''}
+      ${isAdmin()?`<button class="edit" data-site="${escapeHtml(site.site_id)}">Edit</button>`:''}`;
+    card.querySelector('.edit')?.addEventListener('click',()=>openEdit(site));
+    $('grid').appendChild(card);
+    getSiteStats(site).then(stats=>{
+      const statEls=card.querySelectorAll('.stat');
+      statEls[0].classList.remove('loading');statEls[0].querySelector('.num').textContent=stats.handovers;
+      statEls[1].classList.remove('loading');statEls[1].querySelector('.num').textContent=stats.newBugReports;
+      statEls[2].classList.remove('loading');statEls[2].querySelector('.num').textContent=stats.photos;
+      card.querySelector('.last strong').textContent=formatDate(stats.lastHandover);
+    }).catch(()=>{
+      card.querySelectorAll('.stat').forEach(el=>{el.classList.remove('loading');el.querySelector('.num').textContent='—';});
+      card.querySelector('.last strong').textContent='—';
+    });
+  });
+}
+async function loadSites(){clearError();$('loading').hidden=false;$('grid').hidden=true;const {data,error}=await supabaseClient.from('sites_test').select('site_id,site_name,address,active,sort_order,photo_bucket').order('sort_order',{ascending:true}).order('site_name',{ascending:true});if(error){showError('Could not load the site list: '+error.message);$('loading').hidden=true;return;}cachedSites=data||[];renderSites(cachedSites)}
+let cachedSites=[];
+async function updateAuthUI(){const {data}=await supabaseClient.auth.getSession();currentSession=data.session||null;if(currentSession){$('loginBtn').textContent='Log out';$('userLabel').textContent=currentSession.user.email||'';}else{$('loginBtn').textContent='Login';$('userLabel').textContent='';}$('addBtn').classList.toggle('hidden',!isAdmin());if(cachedSites.length)renderSites(cachedSites);}
+async function refresh(){await loadSites();}
 $('loginBtn').onclick=async()=>{if(currentSession){await supabaseClient.auth.signOut();await updateAuthUI();await refresh();return;}$('loginModal').classList.add('show');$('password').focus()};
 $('loginCancel').onclick=()=>$('loginModal').classList.remove('show');
 $('loginSubmit').onclick=async()=>{const p=$('password').value;$('loginError').textContent='';if(!p){$('loginError').textContent='Please enter your password.';return;}const {error}=await supabaseClient.auth.signInWithPassword({email:ADMIN_EMAIL,password:p});if(error){$('loginError').textContent=error.message;return;}$('loginModal').classList.remove('show');$('password').value='';await updateAuthUI();await refresh();};
