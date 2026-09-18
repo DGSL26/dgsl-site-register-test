@@ -29,10 +29,10 @@ const SITE_CONFIGS = {
   SITE2: {
     id: 'SITE2',
     name: 'Site 2',
-    handoversTable: 'handovers_site2_test',
-    bugReportsTable: 'bug_reports_site2_test',
-    notificationsTable: 'site_notifications_site2_test',
-    notificationReadsTable: 'site_notification_device_reads_site2_test',
+    handoversTable: 'handovers_test',
+    bugReportsTable: 'bug_reports_test',
+    notificationsTable: 'site_notifications_test',
+    notificationReadsTable: 'site_notification_device_reads_test',
     photoBucket: 'handover-photos-site2-test'
   }
 };
@@ -318,6 +318,7 @@ async function refreshBugReportsBadge() {
     const { count, error } = await supabaseClient
       .from(BUG_REPORTS_TABLE)
       .select('id', { count: 'exact', head: true })
+      .eq('site_id', SITE.id)
       .eq('is_read', false);
     if (error) throw error;
     updateBugReportsBadge(count || 0);
@@ -401,6 +402,7 @@ async function submitBugReport() {
       website_version: SITE_VERSION,
       page_url: window.location.href,
       account_id: currentUser.id,
+      site_id: SITE.id,
       status: 'New',
       is_read: false
     });
@@ -430,7 +432,8 @@ async function openBugReportDetail(item, parentDialog) {
     const { error } = await supabaseClient
       .from(BUG_REPORTS_TABLE)
       .update({ is_read: true })
-      .eq('id', item.id);
+      .eq('id', item.id)
+      .eq('site_id', SITE.id);
 
     if (error) {
       console.error('Bug report read error:', error);
@@ -522,7 +525,8 @@ async function openBugReportDetail(item, parentDialog) {
       const { error } = await supabaseClient
         .from(BUG_REPORTS_TABLE)
         .delete()
-        .eq('id', item.id);
+        .eq('id', item.id)
+        .eq('site_id', SITE.id);
       if (error) throw error;
 
       // Remove the deleted report from the visible list immediately.
@@ -605,6 +609,7 @@ async function openBugReportsDialog() {
     const { data, error } = await supabaseClient
       .from(BUG_REPORTS_TABLE)
       .select('id,name,trying_to_do,report,created_at,website_version,page_url,is_read')
+      .eq('site_id', SITE.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -685,7 +690,8 @@ async function getSeenNotificationIds() {
       .from(NOTIFICATION_DEVICE_READS_TABLE)
       .select('notification_id')
       .eq('user_id', currentUser.id)
-      .eq('device_key', deviceKey);
+      .eq('device_key', deviceKey)
+      .eq('site_id', SITE.id);
 
     if (error) throw error;
 
@@ -706,7 +712,8 @@ async function markNotificationsSeen(notifications) {
     const rows = notifications.map(notification => ({
       user_id: currentUser.id,
       device_key: deviceKey,
-      notification_id: String(notification.id)
+      notification_id: String(notification.id),
+      site_id: SITE.id
     }));
 
     const { error } = await supabaseClient
@@ -748,6 +755,7 @@ async function loadSiteNotifications() {
     const { data, error } = await supabaseClient
       .from(NOTIFICATIONS_TABLE)
       .select('id,version,title,message,created_at')
+      .eq('site_id', SITE.id)
       .order('created_at', { ascending: false })
       .limit(25);
 
@@ -1128,6 +1136,9 @@ let photosToRemove = [];
     id:
       x.id,
 
+    site_id:
+      SITE.id,
+
     zone:
       x.zone || '',
 
@@ -1314,7 +1325,8 @@ async function loadRecords() {
     } =
       await supabaseClient
         .from(SITE.handoversTable)
-        .select('*');
+        .select('*')
+        .eq('site_id', SITE.id);
 
     if (error) {
       throw error;
@@ -1382,7 +1394,8 @@ async function setupRealtime() {
       {
         event: '*',
         schema: 'public',
-        table: SITE.handoversTable
+        table: SITE.handoversTable,
+        filter: `site_id=eq.${SITE.id}`
       },
       async () => {
         await loadRecords();
@@ -1391,7 +1404,7 @@ async function setupRealtime() {
 
   handoversRealtimeChannel.subscribe((status) => {
     if (status === 'SUBSCRIBED') {
-      console.log('Supabase realtime connected: ${SITE.handoversTable}');
+      console.log(`Supabase realtime connected: ${SITE.handoversTable} (${SITE.id})`);
     } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
       console.warn('Supabase realtime status:', status);
     }
@@ -2167,7 +2180,8 @@ function showRowMoreDialog(record) {
         const { error } = await supabaseClient
           .from(SITE.handoversTable)
           .delete()
-          .eq('id', record.id);
+          .eq('id', record.id)
+          .eq('site_id', SITE.id);
         if (error) throw error;
         if (editing?.id === record.id) editing = null;
         await loadRecords();
@@ -3265,6 +3279,10 @@ for (
             .eq(
               'id',
               x.id
+            )
+            .eq(
+              'site_id',
+              SITE.id
             );
 
 
@@ -3957,6 +3975,10 @@ $('#delete').onclick =
           .eq(
             'id',
             editing.id
+          )
+          .eq(
+            'site_id',
+            SITE.id
           );
 
 
