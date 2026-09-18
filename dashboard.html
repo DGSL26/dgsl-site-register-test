@@ -71,7 +71,7 @@
   .settings-btn{width:42px;height:42px;padding:6px}
 }
 
-.settings-menu{display:grid;gap:8px;margin-top:12px}.settings-menu-btn{width:100%;text-align:left;border:1px solid #d6dde3;background:#fff;color:#17212b;border-radius:8px;padding:12px 14px;font-weight:700;font-size:14px;cursor:pointer}.settings-menu-btn:hover{background:#f7f8f9}.dashboard-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:7px;border-radius:999px;background:#2f80ed;color:#fff;font-size:11px;font-weight:800;vertical-align:middle}.management-box{max-width:500px}.data-management-box{max-width:500px}.data-management-box select{width:100%;padding:11px 12px;border:1px solid #ccd3d8;border-radius:6px;margin:7px 0 12px;font-size:16px;background:#fff}.management-actions{display:grid;gap:8px}.management-import-label{display:block}.bug-reports-box{width:min(950px,94vw);max-width:950px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column}.bug-detail-box{width:min(700px,94vw);max-width:700px;max-height:82vh;overflow:auto}.management-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.management-modal-head h2{margin:0}.modal-x{border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer;color:#17212b}.bug-reports-site{font-size:13px;color:#68737d;margin:8px 0 14px}.management-list{overflow:auto;min-height:0;padding-right:2px}.bug-report-item{display:block;width:100%;text-align:left;border:1px solid #d9e1ea;border-radius:12px;background:#fff;padding:14px 16px;margin:0 0 10px;cursor:pointer}.bug-report-item:hover{background:#f7f9fb}.bug-report-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}.bug-report-new{flex:none;background:#2f80ed;color:#fff;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800}.bug-report-meta{font-size:12px;color:#68737d;margin-bottom:7px}.bug-report-summary{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bug-detail-field{margin-bottom:14px;line-height:1.45}.danger-btn{background:#c62828;color:#fff;border:1px solid #c62828}.danger-btn:hover{background:#ad2020}
+.settings-menu{display:grid;gap:8px;margin-top:12px}.settings-menu-btn{width:100%;text-align:left;border:1px solid #d6dde3;background:#fff;color:#17212b;border-radius:8px;padding:12px 14px;font-weight:700;font-size:14px;cursor:pointer}.settings-menu-btn:hover{background:#f7f8f9}.dashboard-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:7px;border-radius:999px;background:#2f80ed;color:#fff;font-size:11px;font-weight:800;vertical-align:middle}.management-box{max-width:500px}.data-management-box{max-width:500px}.data-management-box select{width:100%;padding:11px 12px;border:1px solid #ccd3d8;border-radius:6px;margin:7px 0 12px;font-size:16px;background:#fff}.management-actions{display:grid;gap:8px}.bug-reports-box{width:min(950px,94vw);max-width:950px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column}.bug-detail-box{width:min(700px,94vw);max-width:700px;max-height:82vh;overflow:auto}.management-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.management-modal-head h2{margin:0}.modal-x{border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer;color:#17212b}.bug-reports-site{font-size:13px;color:#68737d;margin:8px 0 14px}.management-list{overflow:auto;min-height:0;padding-right:2px}.bug-report-item{display:block;width:100%;text-align:left;border:1px solid #d9e1ea;border-radius:12px;background:#fff;padding:14px 16px;margin:0 0 10px;cursor:pointer}.bug-report-item:hover{background:#f7f9fb}.bug-report-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}.bug-report-new{flex:none;background:#2f80ed;color:#fff;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800}.bug-report-meta{font-size:12px;color:#68737d;margin-bottom:7px}.bug-report-summary{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bug-detail-field{margin-bottom:14px;line-height:1.45}.danger-btn{background:#c62828;color:#fff;border:1px solid #c62828}.danger-btn:hover{background:#ad2020}
 @media(max-width:700px){.settings-menu-btn{font-size:16px;padding:12px}.data-management-box,.bug-reports-box,.bug-detail-box{max-width:100%}.bug-reports-box{max-height:86vh}.bug-detail-box{max-height:86vh}}
 </style>
 </head>
@@ -122,7 +122,8 @@
   <div class="management-actions">
     <button class="settings-menu-btn" id="managementBugReports">Bug Reports <span id="managementBugBadge" class="dashboard-badge hidden"></span></button>
     <button class="settings-menu-btn" id="managementExport">Export Data</button>
-    <label class="settings-menu-btn management-import-label" for="managementImport">Import Data<input id="managementImport" type="file" accept="application/json" hidden></label>
+    <button class="settings-menu-btn" id="managementImportButton">Import Data</button>
+    <input id="managementImport" type="file" accept="application/json" hidden>
   </div>
   <div class="actions"><button class="btn secondary" id="managementClose">Close</button></div>
 </div></div>
@@ -312,8 +313,10 @@ function updateDashboardBugBadge(count){
 
 async function refreshDashboardBugBadge(){
   if(!currentSession || !cachedSites.length){ updateDashboardBugBadge(0); return; }
+  const site=getManagementSite();
+  if(!site){ updateDashboardBugBadge(0); return; }
   try{
-    const {count,error}=await supabaseClient.from('bug_reports_test').select('id',{count:'exact',head:true}).eq('is_read',false);
+    const {count,error}=await supabaseClient.from('bug_reports_test').select('id',{count:'exact',head:true}).eq('site_id',site.site_id).eq('is_read',false);
     if(error) throw error;
     updateDashboardBugBadge(count||0);
   }catch(error){
@@ -473,6 +476,7 @@ $('managementClose').onclick=closeDashboardDataManagement;
 $('managementSiteSelect').onchange=e=>{managementSiteId=e.target.value;refreshDashboardBugBadge();};
 $('managementBugReports').onclick=openManagementBugReports;
 $('managementExport').onclick=exportManagementData;
+$('managementImportButton').onclick=()=>$('managementImport').click();
 $('managementImport').onchange=importManagementData;
 $('managementBugReportsClose').onclick=()=>$('managementBugReportsModal').classList.remove('show');
 $('managementBugDetailClose').onclick=()=>$('managementBugDetailModal').classList.remove('show');
