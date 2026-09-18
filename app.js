@@ -13,34 +13,60 @@ const SUPABASE_KEY =
 // ------------------------------------------------------------
 // SITE CONFIGURATION
 // ------------------------------------------------------------
-// The same application can serve multiple sites.  For now the
-// existing TEST URL is Swords and ?site=SITE2 selects Site 2.
-// The site-specific database/storage names keep the data isolated.
-const SITE_CONFIGS = {
-  SWORDS: {
-    id: 'SWORDS',
-    name: 'Knocksedan, PH3',
-    handoversTable: 'handovers_test',
-    bugReportsTable: 'bug_reports_test',
-    notificationsTable: 'site_notifications_test',
-    notificationReadsTable: 'site_notification_device_reads_test',
-    photoBucket: 'handover-photos-test'
-  },
-  SITE2: {
-    id: 'SITE2',
-    name: 'Site 2',
-    handoversTable: 'handovers_test',
-    bugReportsTable: 'bug_reports_test',
-    notificationsTable: 'site_notifications_test',
-    notificationReadsTable: 'site_notification_device_reads_test',
-    photoBucket: 'handover-photos-site2-test'
-  }
+// One shared database structure is used for all TEST sites. The site is
+// selected from the URL (?site=SITE2) and its display settings are loaded
+// from sites_test.
+const DEFAULT_SITE = {
+  id: 'SWORDS',
+  name: 'Knocksedan, PH3',
+  handoversTable: 'handovers_test',
+  bugReportsTable: 'bug_reports_test',
+  notificationsTable: 'site_notifications_test',
+  notificationReadsTable: 'site_notification_device_reads_test',
+  photoBucket: 'handover-photos-test'
 };
 
-const requestedSite = new URLSearchParams(window.location.search).get('site');
-const SITE = SITE_CONFIGS[requestedSite?.toUpperCase()] || SITE_CONFIGS.SWORDS;
+let SITE = { ...DEFAULT_SITE };
+let PHOTO_BUCKET = SITE.photoBucket;
 
-const PHOTO_BUCKET = SITE.photoBucket;
+const requestedSite =
+  new URLSearchParams(window.location.search).get('site')?.trim().toUpperCase() ||
+  'SWORDS';
+
+async function loadSiteConfiguration() {
+  if (!supabaseClient) return;
+
+  const { data, error } = await supabaseClient
+    .from('sites_test')
+    .select('site_id,site_name,address,active,photo_bucket')
+    .eq('site_id', requestedSite)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('Could not load site configuration; using default Swords configuration.', error);
+    return;
+  }
+
+  if (!data || data.active === false) {
+    console.warn('Requested site is not configured or is inactive; using Swords configuration.');
+    return;
+  }
+
+  SITE = {
+    ...DEFAULT_SITE,
+    id: data.site_id,
+    name: data.site_name || data.site_id,
+    address: data.address || '',
+    photoBucket: data.photo_bucket || DEFAULT_SITE.photoBucket
+  };
+
+  PHOTO_BUCKET = SITE.photoBucket;
+
+  document.title = `DGSL Site Register — ${SITE.name}`;
+  document.querySelectorAll('[data-site-name]').forEach(el => {
+    el.textContent = SITE.name;
+  });
+}
 
 const LOGO_FILE =
   'dgsl-logo.png';
@@ -51,7 +77,7 @@ let editing = null;
 let filter = 'All';
 
 const SITE_VERSION = '1.3.3';
-const NOTIFICATIONS_TABLE = SITE.notificationsTable;
+let NOTIFICATIONS_TABLE = SITE.notificationsTable;
 
 // Single source of truth for the website version.
 function applySiteVersion() {
@@ -4556,6 +4582,9 @@ async function startApp() {
     addLogoToForm();
 
     await loadSupabase();
+
+    await loadSiteConfiguration();
+    NOTIFICATIONS_TABLE = SITE.notificationsTable;
 
     const { data: sessionData } =
       await supabaseClient.auth.getSession();
