@@ -42,9 +42,9 @@
 }
 
 .header-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.add-site-header{font-size:20px;min-width:276px;min-height:76px;border-radius:9px}
-.settings-btn{width:76px;height:76px;border:0;border-radius:9px;background:#fff;color:#17212b;font-size:42px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.settings-box{max-width:430px}.settings-account{color:#68737d;font-size:14px;line-height:1.5}
+.add-site-header{font-size:16px;padding:9px 14px;border-radius:6px;min-width:0;min-height:0}
+.settings-btn{position:relative;width:42px;height:42px;padding:6px;border:0;border-radius:0;background:transparent;color:#111;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.dashboard-settings-icon{width:29px;height:29px;display:block}.settings-box{max-width:430px}.settings-account{color:#68737d;font-size:14px;line-height:1.5}
 .box input,.box button{font-size:16px}
 @media(max-width:700px){
   .wrap{max-width:100%;padding:0 14px 42px}
@@ -54,8 +54,8 @@
   .brand h1{font-size:22px;line-height:1.15}
   .brand p{font-size:14px;line-height:1.35;margin-top:5px}
   .header-actions{width:100%;justify-content:space-between;align-items:center}
-  .add-site-header{width:276px;min-width:0;min-height:76px;font-size:20px}
-  .settings-btn{width:76px;height:76px;font-size:40px}
+  .add-site-header{width:auto;min-width:0;min-height:0;font-size:16px;padding:9px 14px}
+  .settings-btn{width:42px;height:42px;padding:6px}
   .toolbar{display:none}
   .modal{padding:14px}
   .box{max-width:100%;padding:20px}
@@ -66,8 +66,8 @@
   .brand img{width:125px}
   .brand h1{font-size:20px}
   .brand p{font-size:13px}
-  .add-site-header{width:240px;min-height:68px;font-size:18px}
-  .settings-btn{width:68px;height:68px;font-size:36px}
+  .add-site-header{width:auto;min-height:0;font-size:16px;padding:9px 14px}
+  .settings-btn{width:42px;height:42px;padding:6px}
 }
 </style>
 </head>
@@ -77,7 +77,12 @@
   <div class="brand"><img src="dgsl-logo.png" alt="DGSL"><div><h1>DGSL Site Register</h1><p>Site dashboard — TEST</p></div></div>
   <div class="header-actions">
     <button class="btn primary add-site-header hidden" id="addBtn">+ Add Site</button>
-    <button class="settings-btn" id="settingsBtn" aria-label="Settings" title="Settings">⚙</button>
+    <button class="settings-btn" id="settingsBtn" aria-label="Settings" title="Settings">
+      <svg class="dashboard-settings-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="#111" stroke="none" d="M19.43 12.98c.04-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65-2-3.46-2.49 1a7.8 7.8 0 0 0-1.69-.98L15 3h-4l-.38 2.93c-.6.25-1.17.58-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.65-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.09.73 1.69.98L11 21h4l.38-2.93c.6-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.13-1.65Z"/>
+        <circle cx="13" cy="12" r="3.2" fill="#fff"/>
+      </svg>
+    </button>
   </div>
 </header>
 <main>
