@@ -119,7 +119,7 @@ function renderSites(sites){
         <div class="stat loading"><span class="num">…</span><span class="label">Photos</span></div>
       </div>
       <div class="last">Last handover: <strong>…</strong></div>
-      ${site.active?`<a class="open" href="${appUrl(site.site_id)}">Open ${escapeHtml(site.site_name)} TEST</a>`:''}
+      ${site.active?`<a class="open" href="${appUrl(site.site_id)}" target="_blank" rel="noopener">Open ${escapeHtml(site.site_name)} TEST</a>`:''}
       ${isAdmin()?`<button class="edit" data-site="${escapeHtml(site.site_id)}">Edit</button><button class="toggle" data-site="${escapeHtml(site.site_id)}">${site.active?'Deactivate':'Activate'}</button>`:''}`;
     card.querySelector('.edit')?.addEventListener('click',()=>openEdit(site));
     card.querySelector('.toggle')?.addEventListener('click',()=>toggleSite(site));
