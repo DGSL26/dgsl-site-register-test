@@ -41,9 +41,9 @@
   .stat .label{font-size:10px}
 }
 
-.header-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.header-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.header-left-action{display:flex;align-items:center}
 .add-site-header{font-size:16px;padding:9px 14px;border-radius:6px;min-width:0;min-height:0}
-.settings-btn{position:relative;width:42px;height:42px;padding:6px;border:0;border-radius:0;background:transparent;color:#111;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.header-login{font-size:16px;padding:9px 14px;border-radius:6px;min-width:0;min-height:0}.settings-btn{position:relative;width:42px;height:42px;padding:6px;border:0;border-radius:0;background:transparent;color:#111;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 .dashboard-settings-icon{width:29px;height:29px;display:block}.settings-box{max-width:430px}.settings-account{color:#68737d;font-size:14px;line-height:1.5}
 .box input,.box button{font-size:16px}
 @media(max-width:700px){
@@ -53,8 +53,9 @@
   .brand img{width:150px;max-width:43vw}
   .brand h1{font-size:22px;line-height:1.15}
   .brand p{font-size:14px;line-height:1.35;margin-top:5px}
-  .header-actions{width:100%;justify-content:space-between;align-items:center}
+  .header-actions{width:100%;justify-content:space-between;align-items:center}.header-left-action{display:flex;align-items:center}
   .add-site-header{width:auto;min-width:0;min-height:0;font-size:16px;padding:9px 14px}
+  .header-login{font-size:16px;padding:9px 14px}
   .settings-btn{width:42px;height:42px;padding:6px}
   .toolbar{display:none}
   .modal{padding:14px}
@@ -76,7 +77,10 @@
 <header class="top">
   <div class="brand"><img src="dgsl-logo.png" alt="DGSL"><div><h1>DGSL Site Register</h1><p>Site dashboard — TEST</p></div></div>
   <div class="header-actions">
-    <button class="btn primary add-site-header hidden" id="addBtn">+ Add Site</button>
+    <div class="header-left-action">
+      <button class="btn primary add-site-header hidden" id="addBtn">+ Add Site</button>
+      <button class="btn primary header-login hidden" id="headerLogin">Login</button>
+    </div>
     <button class="settings-btn" id="settingsBtn" aria-label="Settings" title="Settings">
       <svg class="dashboard-settings-icon" viewBox="0 0 24 24" aria-hidden="true">
         <path fill="#111" stroke="none" d="M19.43 12.98c.04-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65-2-3.46-2.49 1a7.8 7.8 0 0 0-1.69-.98L15 3h-4l-.38 2.93c-.6.25-1.17.58-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.65-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.09.73 1.69.98L11 21h4l.38-2.93c.6-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.13-1.65Z"/>
@@ -99,11 +103,9 @@
 
 <div class="modal" id="settingsModal"><div class="box settings-box">
   <h2>Settings</h2>
-  <div class="settings-account" id="settingsAccount"></div>
   <div class="actions">
     <button class="btn secondary" id="settingsClose">Close</button>
-    <button class="btn primary" id="settingsLogin">Login</button>
-    <button class="btn primary hidden" id="settingsLogout">Log out</button>
+    <button class="btn primary" id="settingsLogout">Log out</button>
   </div>
 </div></div>
 
@@ -226,11 +228,11 @@ function renderSites(sites){
 }
 async function loadSites(){clearError();$('loading').hidden=false;$('grid').hidden=true;const {data,error}=await supabaseClient.from('sites_test').select('site_id,site_name,address,active,sort_order,photo_bucket').order('sort_order',{ascending:true}).order('site_name',{ascending:true});if(error){showError('Could not load the site list: '+error.message);$('loading').hidden=true;return;}cachedSites=data||[];renderSites(cachedSites)}
 let cachedSites=[];
-async function updateAuthUI(){const {data}=await supabaseClient.auth.getSession();currentSession=data.session||null;$('userLabel').textContent=currentSession?.user?.email||'';$('addBtn').classList.toggle('hidden',!isAdmin());$('settingsLogin').classList.toggle('hidden',!!currentSession);$('settingsLogout').classList.toggle('hidden',!currentSession);$('settingsAccount').textContent=currentSession?`Signed in as ${currentSession.user.email}`:'Not signed in';if(cachedSites.length)renderSites(cachedSites);}
+async function updateAuthUI(){const {data}=await supabaseClient.auth.getSession();currentSession=data.session||null;$('userLabel').textContent='';$('addBtn').classList.toggle('hidden',!isAdmin());$('settingsBtn').classList.toggle('hidden',!currentSession);$('headerLogin').classList.toggle('hidden',!!currentSession);$('settingsLogout').classList.toggle('hidden',!currentSession);if(cachedSites.length)renderSites(cachedSites);}
 async function refresh(){await loadSites();}
-$('settingsBtn').onclick=()=>{$('settingsAccount').textContent=currentSession?`Signed in as ${currentSession.user.email}`:'Not signed in';$('settingsModal').classList.add('show')};
+$('settingsBtn').onclick=()=>{$('settingsModal').classList.add('show')};
+$('headerLogin').onclick=()=>{$('loginModal').classList.add('show');setTimeout(()=>$('password').focus(),50)};
 $('settingsClose').onclick=()=>$('settingsModal').classList.remove('show');
-$('settingsLogin').onclick=()=>{$('settingsModal').classList.remove('show');$('loginModal').classList.add('show');setTimeout(()=>$('password').focus(),50)};
 $('settingsLogout').onclick=async()=>{await supabaseClient.auth.signOut();$('settingsModal').classList.remove('show');await updateAuthUI();await refresh();};
 $('loginCancel').onclick=()=>$('loginModal').classList.remove('show');
 $('loginSubmit').onclick=async()=>{const p=$('password').value;$('loginError').textContent='';if(!p){$('loginError').textContent='Please enter your password.';return;}const {error}=await supabaseClient.auth.signInWithPassword({email:ADMIN_EMAIL,password:p});if(error){$('loginError').textContent=error.message;return;}$('loginModal').classList.remove('show');$('password').value='';await updateAuthUI();await refresh();};
