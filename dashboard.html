@@ -86,7 +86,7 @@ async function getSiteStats(site){
   const [handoverResult,bugResult,latestResult,photoResult]=await Promise.all([
     supabaseClient.from('handovers_test').select('id',{count:'exact',head:true}).eq('site_id',site.site_id),
     supabaseClient.from('bug_reports_test').select('id',{count:'exact',head:true}).eq('site_id',site.site_id).eq('is_read',false),
-    supabaseClient.from('handovers_test').select('handover_date').eq('site_id',site.site_id).not('handover_date','is',None).order('handover_date',{ascending:false,nullsLast:true}).limit(1).maybeSingle(),
+    supabaseClient.from('handovers_test').select('handover_date').eq('site_id',site.site_id).not('handover_date','is',null).order('handover_date',{ascending:false,nullsLast:true}).limit(1).maybeSingle(),
     countStorageFiles(site.photo_bucket)
   ]);
   return {
