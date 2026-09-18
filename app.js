@@ -1233,6 +1233,9 @@ function toDatabase(x) {
     id:
       x.id,
 
+    site_id:
+      SITE.id,
+
     zone:
       x.zone || null,
 
