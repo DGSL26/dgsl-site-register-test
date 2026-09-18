@@ -159,7 +159,7 @@ function updateAuthUi() {
   if (newButton) newButton.style.display = currentUser ? '' : 'none';
   if (notificationsButton) notificationsButton.style.display = currentUser ? '' : 'none';
   if (settingsButton) settingsButton.style.display = currentUser ? '' : 'none';
-  showBugReportsButtonForAdmin();
+
 
   const editHeader = document.getElementById('editHeader');
   if (editHeader) editHeader.style.display = currentUser ? '' : 'none';
